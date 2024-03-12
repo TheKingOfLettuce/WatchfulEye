@@ -10,7 +10,7 @@ namespace WatchfulEye.Server.Eyes;
 
 public class EyeManager {
     private Dictionary<string, EyeSocket> _eyeSockets;
-    private RouterSocket _server;
+    private DealerSocket _server;
     private ZeroMQMessageHandler _handler;
 
     private NetMQPoller _poller;
@@ -19,7 +19,7 @@ public class EyeManager {
 
     public EyeManager() {
         _eyeSockets = new Dictionary<string, EyeSocket>();
-        _server = new RouterSocket("@tcp://localhost:8000");
+        _server = new DealerSocket("@tcp://localhost:8000");
 
         _handler = new ZeroMQMessageHandler();
         _server.ReceiveReady += _handler.HandleMessageReceived;

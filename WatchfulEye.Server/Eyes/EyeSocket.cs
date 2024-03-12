@@ -15,7 +15,7 @@ public class EyeSocket : IDisposable {
     private readonly IPEndPoint _connectionPoint;
     private readonly Socket _mainSocket;
 
-    private RouterSocket _server;
+    private DealerSocket _server;
     private ZeroMQMessageHandler _handler;
     private NetMQPoller _poller;
 
@@ -24,7 +24,7 @@ public class EyeSocket : IDisposable {
         _mainSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         _mainSocket.Bind(_connectionPoint);
 
-        _server = new RouterSocket($"@tcp://localhost:{port}");
+        _server = new DealerSocket($"@tcp://localhost:{port}");
         _handler = new ZeroMQMessageHandler();
         _server.ReceiveReady += _handler.HandleMessageReceived;
 
