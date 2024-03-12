@@ -1,0 +1,27 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Run Server",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "BuildServer",
+            "program": "${workspaceFolder}/WatchfulEye.Server/bin/Debug/net7.0/WatchfulEye.Server.exe",
+            "args": [],
+            "cwd": "${workspaceFolder}/WatchfulEye.Server",
+            "console": "externalTerminal",
+            "stopAtEntry": false
+        },
+        {
+            "name": "Run Client",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "BuildClient",
+            "program": "${workspaceFolder}/WatchfulEye.Client/bin/Debug/net7.0/WatchfulEye.Client.exe",
+            "args": [],
+            "cwd": "${workspaceFolder}/WatchfulEye.Client",
+            "console": "externalTerminal",
+            "stopAtEntry": false
+        }
+    ]
+}
