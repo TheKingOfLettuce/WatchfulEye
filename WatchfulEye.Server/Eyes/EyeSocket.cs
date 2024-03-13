@@ -20,7 +20,7 @@ public class EyeSocket : IDisposable {
     private NetMQPoller _poller;
 
     public EyeSocket(string ip = "localhost", int port = 8000) {
-        _connectionPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), port+1);
+        _connectionPoint = new IPEndPoint(IPAddress.Parse("0.0.0.0"), port+1);
         _mainSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         _mainSocket.Bind(_connectionPoint);
 
@@ -37,10 +37,17 @@ public class EyeSocket : IDisposable {
         _server.SendFrame(mesage.ToData());
     }
 
+    public void StartVision() {
+        RequestStreamMessage streamMessage = new RequestStreamMessage(15, _connectionPoint.Port);
+        Listen();
+        SendMessage(streamMessage);
+        Task.Run(() => VLCLauncer.ConnectToVision(this, streamMessage.StreamLength));
+    }
+
 
     public void Listen() {
         _mainSocket.Listen();
-        Logging.Debug($"EyeSocket listening");
+        Logging.Debug($"EyeSocket is listening for vision");
     }
 
     public async Task<Stream> GetDataStreamAsync() {

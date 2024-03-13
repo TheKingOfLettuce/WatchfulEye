@@ -36,6 +36,12 @@ public class EyeManager {
         }
     }
 
+    public void ViewAllVision() {
+        foreach(EyeSocket socket in _eyeSockets.Values) {
+            socket.StartVision();
+        }
+    }
+
     private void HandleRegisterEye(RegisterEyeMessage msg) {
         Logging.Info($"Received a Register Eye message for {msg.EyeName}");
         EyeSocket socket = new EyeSocket(msg.EyeName, port: _eyeSocketPort);

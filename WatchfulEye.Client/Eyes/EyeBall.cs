@@ -1,3 +1,5 @@
+using System.Diagnostics;
+using System.Runtime.InteropServices;
 using NetMQ;
 using NetMQ.Sockets;
 using WatchfulEye.Shared.MessageLibrary;
@@ -48,6 +50,30 @@ public class EyeBall {
     }
 
     private void HandleStreamRequest(RequestStreamMessage message) {
-        Logging.Debug($"Got Stream Request: {message.StreamLength}");
+        Logging.Info($"Got Stream Request: {message.StreamLength}");
+        Task.Run(() => StreamVideo(message));
+    }
+
+    private async Task StreamVideo(RequestStreamMessage message) {
+        Logging.Debug($"Starting up a video stream python process");
+
+        ProcessStartInfo startInfo = new ProcessStartInfo {
+            FileName = "python",
+            ArgumentList = {
+                Path.Combine(Directory.GetCurrentDirectory(), "PythonScripts", "StreamVideo.py"),
+                message.VideoWidth.ToString(),
+                message.VideoHeight.ToString(),
+                message.Framerate.ToString(),
+                "127.0.0.0",
+                message.Port.ToString(),
+                message.StreamLength.ToString()
+            },
+            CreateNoWindow = false
+        };
+
+        Logging.Debug("Starting python stream");
+        using Process pythonStream = Process.Start(startInfo);
+        await pythonStream.WaitForExitAsync();
+        Logging.Debug("Python stream finished");
     }
 }

@@ -1,4 +1,7 @@
-﻿using LibVLCSharp.Shared;
+﻿using System.Net;
+using System.Net.Sockets;
+using LibVLCSharp.Shared;
+using WatchfulEye.Server;
 using WatchfulEye.Server.Eyes;
 using WatchfulEye.Shared.MessageLibrary.Messages;
 using WatchfulEye.Utility;
@@ -10,6 +13,8 @@ internal static class Program {
 
     public static async Task Main(string[] args) {
         Logging.Info("Starting the WatchfulEye");
+        await Test();
+        return;
 
         _eyes = new EyeManager();
         await ConsoleStuff();
@@ -27,32 +32,22 @@ internal static class Program {
             
             switch (userResp) {
                 case 1:
-                    _eyes.PostToAllSockets(new RequestStreamMessage(5));
+                    _eyes.ViewAllVision();
                     break;
                 case 0:
                     Logging.Debug("Quitting server");
                     return;
             }
         }
+    }
+
+    public static async Task Test() {
+        IPEndPoint point = new IPEndPoint(IPAddress.Parse("0.0.0.0"), 8000);
+        Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        socket.Bind(point);
+        socket.Listen();
+        Socket handle = await socket.AcceptAsync();
+        Stream dataStream = new NetworkStream(handle, true);
+        await VLCLauncer.HostStream(dataStream, 60);
     } 
-
-    // private static async Task TestEye() {
-    //     Logging.Info("Creating test eye socket");
-    //     EyeSocket eye = new EyeSocket();
-
-    //     using var libvlc = new LibVLC();
-    //     Logging.Debug("Getting video data stream from eye");
-    //     using StreamMediaInput input = new StreamMediaInput(await eye.GetDataStreamAsync());
-    //     Logging.Debug("Creating media from video stream");
-    //     using Media stream = new Media(libvlc, input);
-    //     using MediaPlayer player = new MediaPlayer(stream);
-    //     Logging.Debug("Playing stream into player");
-    //     player.Play();
-
-    //     Logging.Debug("Waiting 30 seconds");
-    //     await Task.Delay(30000);
-    //     Logging.Debug("30 seconds elapsed, returning");
-    //     player.Stop();
-    //     return;
-    // }
 }

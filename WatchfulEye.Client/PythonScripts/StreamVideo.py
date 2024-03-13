@@ -5,7 +5,8 @@ import sys
 
 def main():
     args = sys.argv[1:]
-    StreamCamera(args[0], args[1], args[2], args[3], args[4], args[5])
+    print("Running from python stream with args", args)
+    StreamCamera(int(args[0]), int(args[1]), int(args[2]), args[3], int(args[4]), int(args[5]))
 
 def StreamCamera(width, height, framerate, server, port, time):
     client_socket = socket.socket()
@@ -14,18 +15,18 @@ def StreamCamera(width, height, framerate, server, port, time):
     connection = client_socket.makefile('wb')
     try:
         camera = picamera.PiCamera()
-        camera.resolution = (640, 480)
-        camera.framerate = 24
-        # Start a preview and let the camera warm up for 2 seconds
+        camera.resolution = (width, height)
+        camera.framerate = framerate
         camera.start_preview()
+        #allow camera to "warm up"
         time.sleep(2)
-        # Start recording, sending the output to the connection for 60
-        # seconds, then stop
-        camera.start_recording(connection, format='h264')
-        camera.wait_recording(60)
-        camera.stop_recording()
-        camera.stop_preview()
+        camera.start_recording(connection, format='mjpeg')
+        camera.wait_recording(time)
+        
     finally:
+        if camera:
+            camera.stop_recording()
+            camera.stop_preview()
         connection.close()
         client_socket.close()
 
