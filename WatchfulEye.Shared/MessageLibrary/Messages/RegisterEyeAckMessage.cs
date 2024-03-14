@@ -8,11 +8,11 @@ public class RegisterEyeAckMessage : BaseMessage {
     [JsonInclude]
     public readonly int Port;
     [JsonInclude]
-    public readonly string PipeName;
+    public readonly string ServerIP;
 
     [JsonConstructor]
-    public RegisterEyeAckMessage(int port, string pipeName) {
+    public RegisterEyeAckMessage(int port, string serverIp) {
         Port = port;
-        PipeName = pipeName;
+        ServerIP = serverIp;
     }
 }

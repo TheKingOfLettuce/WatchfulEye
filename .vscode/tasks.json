@@ -30,6 +30,20 @@
                 "${workspaceFolder}/WatchfulEye.Client/WatchfulEye.Client.csproj"
             ],
             "problemMatcher": "$msCompile"
+        },
+
+        {
+            "label": "BuildClientLinux",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/WatchfulEye.Client/WatchfulEye.Client.csproj",
+                "--runtime",
+                "linux-arm",
+                "--self-contained"
+            ],
+            "problemMatcher": "$msCompile"
         }
     ]
 }

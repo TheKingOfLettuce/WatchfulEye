@@ -1,4 +1,6 @@
 using System.IO.Pipes;
+using System.Net;
+using System.Net.Sockets;
 using NetMQ;
 using NetMQ.Sockets;
 using WatchfulEye.Shared.MessageLibrary;
@@ -10,24 +12,34 @@ namespace WatchfulEye.Server.Eyes;
 
 public class EyeManager {
     private Dictionary<string, EyeSocket> _eyeSockets;
-    private DealerSocket _server;
-    private ZeroMQMessageHandler _handler;
-
-    private NetMQPoller _poller;
 
     private static int _eyeSocketPort = 8001;
 
     public EyeManager() {
         _eyeSockets = new Dictionary<string, EyeSocket>();
-        _server = new DealerSocket("@tcp://localhost:8000");
-
-        _handler = new ZeroMQMessageHandler();
-        _server.ReceiveReady += _handler.HandleMessageReceived;
-        _handler.Subscribe<RegisterEyeMessage>(HandleRegisterEye);
         
-        _poller = new NetMQPoller();
-        _poller.Add(_server);
-        _poller.RunAsync();
+        Task.Run(NetworkDiscovery);
+    }
+
+    public async Task NetworkDiscovery() {
+        const int DiscoverPort = 8888;
+        Logging.Debug($"Beginning network discovery on port {DiscoverPort}");
+        UdpClient server = new UdpClient(DiscoverPort);
+
+        while (true) {
+            IPEndPoint serverIP = new IPEndPoint(IPAddress.Any, 0);
+            byte[] receiveData = server.Receive(ref serverIP);
+            (MessageCodes, string) msgData = MessageFactory.GetMessageData(receiveData);
+            if (msgData.Item1 != MessageCodes.REGISTER_EYE) {
+                Logging.Warning($"Network discovery received a message that wasn't a register message");
+                continue;
+            }
+            HandleRegisterEye(MessageFactory.DeserializeMsg<RegisterEyeMessage>(msgData.Item2), IPUtils.GetLocalIP(), _eyeSocketPort);
+            Logging.Debug("Eye socket created, sending register ack back");
+            byte[] msgAckData = new RegisterEyeAckMessage(_eyeSocketPort, IPUtils.GetLocalIP()).ToData();
+            await server.SendAsync(msgAckData, msgAckData.Length, serverIP);
+            _eyeSocketPort += 2;
+        }
     }
 
     public void PostToAllSockets(BaseMessage message) {
@@ -42,13 +54,9 @@ public class EyeManager {
         }
     }
 
-    private void HandleRegisterEye(RegisterEyeMessage msg) {
+    private void HandleRegisterEye(RegisterEyeMessage msg, string ip, int port) {
         Logging.Info($"Received a Register Eye message for {msg.EyeName}");
-        EyeSocket socket = new EyeSocket(msg.EyeName, port: _eyeSocketPort);
-        RegisterEyeAckMessage msgAck = new RegisterEyeAckMessage(_eyeSocketPort, msg.EyeName);
-        _eyeSocketPort += 2;
-        _eyeSockets.Add(msg.EyeName, socket);
-        Logging.Debug("Eye socket created, sending register ack back");
-        _server.SendFrame(msgAck.ToData());
+        EyeSocket socket = new EyeSocket(ip, port: port);
+        _eyeSockets.Add(ip, socket);
     }
 }

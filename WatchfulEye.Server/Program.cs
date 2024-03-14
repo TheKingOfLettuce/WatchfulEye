@@ -13,9 +13,6 @@ internal static class Program {
 
     public static async Task Main(string[] args) {
         Logging.Info("Starting the WatchfulEye");
-        await Test();
-        return;
-
         _eyes = new EyeManager();
         await ConsoleStuff();
     }

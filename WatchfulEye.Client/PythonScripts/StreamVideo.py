@@ -8,7 +8,7 @@ def main():
     print("Running from python stream with args", args)
     StreamCamera(int(args[0]), int(args[1]), int(args[2]), args[3], int(args[4]), int(args[5]))
 
-def StreamCamera(width, height, framerate, server, port, time):
+def StreamCamera(width, height, framerate, server, port, recordTime):
     client_socket = socket.socket()
     client_socket.connect((server, port))
     # Make a file-like object out of the connection
@@ -21,12 +21,13 @@ def StreamCamera(width, height, framerate, server, port, time):
         #allow camera to "warm up"
         time.sleep(2)
         camera.start_recording(connection, format='mjpeg')
-        camera.wait_recording(time)
+        camera.wait_recording(recordTime)
+        camera.stop_recording()
+        camera.stop_preview()
         
     finally:
-        if camera:
-            camera.stop_recording()
-            camera.stop_preview()
+        camera.stop_recording()
+        camera.stop_preview()
         connection.close()
         client_socket.close()
 

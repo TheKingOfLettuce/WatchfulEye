@@ -19,12 +19,12 @@ public class EyeSocket : IDisposable {
     private ZeroMQMessageHandler _handler;
     private NetMQPoller _poller;
 
-    public EyeSocket(string ip = "localhost", int port = 8000) {
+    public EyeSocket(string ip, int port) {
         _connectionPoint = new IPEndPoint(IPAddress.Parse("0.0.0.0"), port+1);
         _mainSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         _mainSocket.Bind(_connectionPoint);
 
-        _server = new DealerSocket($"@tcp://localhost:{port}");
+        _server = new DealerSocket($"@tcp://{ip}:{port}");
         _handler = new ZeroMQMessageHandler();
         _server.ReceiveReady += _handler.HandleMessageReceived;
 
@@ -51,10 +51,18 @@ public class EyeSocket : IDisposable {
     }
 
     public async Task<Stream> GetDataStreamAsync() {
-        Logging.Debug($"Looking to accept a connection");
-        Socket handle = await _mainSocket.AcceptAsync();
-        Logging.Debug($"Accepted an Eye Connection, creating network stream");
-        return new NetworkStream(handle, true);
+        const int Time_Seconds = 10000;
+        Logging.Debug($"Looking to accept a connection within {Time_Seconds/1000} seconds");
+        CancellationTokenSource timeout = new CancellationTokenSource(Time_Seconds);
+        try {
+            Socket handle = await _mainSocket.AcceptAsync(timeout.Token);
+            Logging.Debug($"Accepted an Eye Connection, creating network stream");
+            return new NetworkStream(handle, true);
+        }
+        catch (OperationCanceledException canceledE) {
+            Log.Warning("Timeout occured when attempting vision connection", canceledE);
+            return null;
+        }
     }
 
     public void Dispose() {
