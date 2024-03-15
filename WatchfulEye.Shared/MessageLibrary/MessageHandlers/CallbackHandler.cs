@@ -5,7 +5,7 @@ namespace WatchfulEye.Shared.MessageLibrary.MessageHandlers;
 public interface CallbackHandlerBase {}
 
 public class CallbackHandler<T> : CallbackHandlerBase where T : BaseMessage  {
-    private event Action<T> _callbacks;
+    private event Action<T>? _callbacks;
 
     public void AddCallback(Action<T> func) {
         _callbacks += func;

@@ -1,8 +1,8 @@
-using System;
-using System.Collections.Generic;
 using WatchfulEye.Shared.MessageLibrary.Messages;
 
 namespace WatchfulEye.Shared.MessageLibrary.MessageHandlers;
+
+#pragma warning disable CS8602 // null reference, but we can gurantee the callbacks are not null
 
 public class MessageHandlerBase {
     private Dictionary<Type, CallbackHandlerBase> _services;
@@ -34,3 +34,5 @@ public class MessageHandlerBase {
         (_services[messageType] as CallbackHandler<T>).HandleMessage(message);
     }
 }
+
+#pragma warning restore CS8602

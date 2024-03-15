@@ -50,7 +50,7 @@ public class EyeSocket : IDisposable {
         Logging.Debug($"EyeSocket is listening for vision");
     }
 
-    public async Task<Stream> GetDataStreamAsync() {
+    public async Task<Stream?> GetDataStreamAsync() {
         const int Time_Seconds = 10000;
         Logging.Debug($"Looking to accept a connection within {Time_Seconds/1000} seconds");
         CancellationTokenSource timeout = new CancellationTokenSource(Time_Seconds);

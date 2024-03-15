@@ -7,6 +7,7 @@ def main():
     args = sys.argv[1:]
     print("Running from python stream with args", args)
     StreamCamera(int(args[0]), int(args[1]), int(args[2]), args[3], int(args[4]), int(args[5]))
+    sys.exit(1)
 
 def StreamCamera(width, height, framerate, server, port, recordTime):
     client_socket = socket.socket()

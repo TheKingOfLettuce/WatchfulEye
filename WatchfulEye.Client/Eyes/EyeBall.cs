@@ -11,14 +11,14 @@ using WatchfulEye.Utility;
 
 namespace WatchfulEye.Client.Eyes;
 
-public class EyeBall {
+public class EyeBall : IDisposable {
     public readonly string EyeName;
 
     private DealerSocket _client;
     private ZeroMQMessageHandler _handler;
     private NetMQPoller _poller;
 
-    private string _socketIP;
+    private string? _socketIP;
     
     public EyeBall(string eyeName) {
         EyeName = eyeName;
@@ -73,6 +73,10 @@ public class EyeBall {
 
     private async Task StreamVideo(RequestStreamMessage message) {
         Logging.Debug($"Starting up a video stream python process");
+        if (_socketIP == null) {
+            Logging.Error("Stream has been requested but current Socket IP is null");
+            return;
+        }
 
         ProcessStartInfo startInfo = new ProcessStartInfo {
             FileName = "python",
@@ -89,8 +93,21 @@ public class EyeBall {
         };
 
         Logging.Debug("Starting python stream");
-        using Process pythonStream = Process.Start(startInfo);
+        using Process? pythonStream = Process.Start(startInfo);
+        if (pythonStream == null) {
+            Logging.Error("Failed to start python stream");
+            return;
+        }
         await pythonStream.WaitForExitAsync();
         Logging.Debug("Python stream finished");
+    }
+
+    public void Dispose() {
+        GC.SuppressFinalize(this);
+
+        _poller.Stop();
+        _poller.Dispose();
+
+        _client.Dispose();
     }
 }
