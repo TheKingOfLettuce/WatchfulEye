@@ -27,17 +27,17 @@ public class EyeManager {
         UdpClient server = new UdpClient(DiscoverPort);
 
         while (true) {
-            IPEndPoint serverIP = new IPEndPoint(IPAddress.Any, 0);
-            byte[] receiveData = server.Receive(ref serverIP);
-            (MessageCodes, string) msgData = MessageFactory.GetMessageData(receiveData);
+            UdpReceiveResult clientResults = await server.ReceiveAsync();
+            (MessageCodes, string) msgData = MessageFactory.GetMessageData(clientResults.Buffer);
             if (msgData.Item1 != MessageCodes.REGISTER_EYE) {
                 Logging.Warning($"Network discovery received a message that wasn't a register message");
                 continue;
             }
-            HandleRegisterEye(MessageFactory.DeserializeMsg<RegisterEyeMessage>(msgData.Item2), IPUtils.GetLocalIP(), _eyeSocketPort);
+            string localIP = IPUtils.GetLocalIP();
+            HandleRegisterEye(MessageFactory.DeserializeMsg<RegisterEyeMessage>(msgData.Item2), localIP, _eyeSocketPort);
             Logging.Debug("Eye socket created, sending register ack back");
-            byte[] msgAckData = new RegisterEyeAckMessage(_eyeSocketPort, IPUtils.GetLocalIP()).ToData();
-            await server.SendAsync(msgAckData, msgAckData.Length, serverIP);
+            byte[] msgAckData = new RegisterEyeAckMessage(_eyeSocketPort, localIP).ToData();
+            await server.SendAsync(msgAckData, msgAckData.Length, clientResults.RemoteEndPoint);
             _eyeSocketPort += 2;
         }
     }

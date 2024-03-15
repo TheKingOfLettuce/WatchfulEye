@@ -39,20 +39,27 @@ public class EyeBall : IDisposable {
 
     public void SocketEye() {
         UdpClient client = new UdpClient();
-        IPEndPoint clientIP = new IPEndPoint(IPAddress.Any, 0);
         client.EnableBroadcast = true;
         Logging.Debug("Attempting to socket eye");
-        RegisterEyeMessage message = new RegisterEyeMessage("TestEye");
-        byte[] msgData = message.ToData();
-        client.Send(msgData, msgData.Length, new IPEndPoint(IPAddress.Broadcast, 8888));
-        byte[] receiveData = client.Receive(ref clientIP);
+
+        // send register
+        byte[] msgData = new RegisterEyeMessage(EyeName).ToData();
+        client.Send(new RegisterEyeMessage(EyeName).ToData(), msgData.Length, new IPEndPoint(IPAddress.Broadcast, 8888));
+
+        // attempt receive ack
+        IPEndPoint serverIP = new IPEndPoint(IPAddress.Any, 0);
+        byte[] receiveData = client.Receive(ref serverIP);
         Logging.Debug("Received message from network discover");
+
+        // decode ack
         (MessageCodes, string) receiveMsg = MessageFactory.GetMessageData(receiveData);
         if (receiveMsg.Item1 != MessageCodes.REGISTER_EYE_ACK) {
             Logging.Error("Received a message back that is not a register ack message, cannot proceed");
             throw new Exception("Failed to parse or receive ACK message");
         }
         RegisterEyeAckMessage ackMessage = MessageFactory.DeserializeMsg<RegisterEyeAckMessage>(receiveMsg.Item2);
+
+        // fully socket
         HandleRegisterEyeAck(ackMessage);
         client.Close();
         
