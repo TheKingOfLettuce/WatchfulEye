@@ -15,6 +15,7 @@ internal static class Program {
         Logging.Info("Starting the WatchfulEye");
         _eyes = new EyeManager();
         await ConsoleStuff();
+        _eyes.Dispose();
     }
 
     public static async Task ConsoleStuff() {

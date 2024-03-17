@@ -41,7 +41,7 @@ public class EyeSocket : IDisposable {
         RequestStreamMessage streamMessage = new RequestStreamMessage(15, _connectionPoint.Port);
         Listen();
         SendMessage(streamMessage);
-        Task.Run(() => VLCLauncer.ConnectToVision(this, streamMessage.StreamLength));
+        Task.Run(() => VLCLauncer.ConnectToVision(this, streamMessage.StreamLength+5));
     }
 
 
@@ -66,9 +66,9 @@ public class EyeSocket : IDisposable {
     }
 
     public void Dispose() {
+        Logging.Debug($"Disposing {nameof(EyeSocket)}");
         GC.SuppressFinalize(this);
 
-        _mainSocket.Shutdown(SocketShutdown.Both);
         _mainSocket.Close();
         _mainSocket.Dispose();
 

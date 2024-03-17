@@ -18,7 +18,7 @@
             "request": "launch",
             "preLaunchTask": "BuildClient",
             "program": "${workspaceFolder}/WatchfulEye.Client/bin/Debug/net7.0/WatchfulEye.Client.exe",
-            "args": [],
+            "args": ["TestEye"],
             "cwd": "${workspaceFolder}/WatchfulEye.Client",
             "console": "externalTerminal",
             "stopAtEntry": false

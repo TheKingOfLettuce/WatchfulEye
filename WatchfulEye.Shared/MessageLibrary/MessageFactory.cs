@@ -15,7 +15,7 @@ public static class MessageFactory {
         return (msgCode, jsonString);
     }
 
-    public static T DeserializeMsg<T>(string jsonData) where T : BaseMessage {
+    public static T? DeserializeMsg<T>(string jsonData) where T : BaseMessage {
         return JsonSerializer.Deserialize<T>(jsonData);
     }
 }

@@ -1,93 +1,261 @@
-using System.Runtime.CompilerServices;
-using Serilog;
-using Serilog.Context;
-using Serilog.Core;
-using Serilog.Events;
+// There is method chaining with the CallerInfo Attributes that ReSharper hates
+// ReSharper disable ExplicitCallerInfoArgument
 
 namespace WatchfulEye.Utility;
 
-public static class Logging {
-    private static ILogger _logger;
-    private static LoggingLevelSwitch _switch;
+using System;
+using Serilog;
+using Serilog.Events;
+using System.Runtime.CompilerServices;
+using Serilog.Context;
+using Serilog.Core;
+using Serilog.Formatting.Json;
 
-    private const string LOG_TEMPLATE = "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level}] ({Class}/{Method} as line {LineNum}) {Message}{NewLine}{Exception}";
+public static class Logging
+{
+    public const string LOG_TEMPLATE = "[{Timestamp:HH:mm:ss:fff} {Level}] ({File}/{Method}) {Message:j}{NewLine}{Exception}";
+    public const string DEBUG_LOG_TEMPLATE = "[{Timestamp:HH:mm:ss:fff} {Level}] ({File}/{Method} at line {Line}) {Message:j}{NewLine}{Exception}";
 
+    private static readonly LoggingLevelSwitch _logLevelSwitch = new LoggingLevelSwitch();
 
-    static Logging() {
-        LoggerConfiguration config = new LoggerConfiguration();
-        _switch = new LoggingLevelSwitch(LogEventLevel.Debug);
-        config.MinimumLevel.ControlledBy(_switch);
+    public static ILogger LoggingInterface { get; private set; }
 
-        config.WriteTo.Console(outputTemplate: LOG_TEMPLATE);
-        config.Enrich.FromLogContext();
+    public static LogEventLevel CurrentLevel => _logLevelSwitch.MinimumLevel;
 
-        _logger = config.CreateLogger();
+    static Logging()
+    {
+        LoggerConfiguration logConfig = new LoggerConfiguration();
+        
+        string template;
+        #if DEBUG
+        template = DEBUG_LOG_TEMPLATE;
+        #else
+        template = LOG_TEMPLATE;
+        #endif
 
+        logConfig.WriteTo.Console(outputTemplate: template);
+        logConfig.Enrich.FromLogContext();
+        
+        #if DEBUG
+        _logLevelSwitch.MinimumLevel = LogEventLevel.Debug;
+        #else
+        _logLevelSwitch.MinimumLevel = LogEventLevel.Information;
+        #endif
+
+        logConfig.MinimumLevel.ControlledBy(_logLevelSwitch);
+        LoggingInterface = logConfig.CreateLogger();
     }
 
-    public static void Debug(string msg, 
-    [CallerFilePath]string path = "", 
-    [CallerMemberName]string method="", 
-    [CallerLineNumber]int line = -1) => LogMessage(LogEventLevel.Debug, msg, path, method, line);
+    /// <summary>
+    /// Change the current logging level via a <see cref="LoggingLevelSwitch"/>
+    /// </summary>
+    /// <param name="newLevel">the new logging leve to switch to</param>
+    public static void ChangeLogLevel(LogEventLevel newLevel) => _logLevelSwitch.MinimumLevel = newLevel;
 
-    public static void Info(string msg, 
-    [CallerFilePath]string path = "", 
-    [CallerMemberName]string method="", 
-    [CallerLineNumber]int line = -1) => LogMessage(LogEventLevel.Information, msg, path, method, line);
-
-    public static void Warning(string msg, 
-    [CallerFilePath]string path = "", 
-    [CallerMemberName]string method="", 
-    [CallerLineNumber]int line = -1) => LogMessage(LogEventLevel.Warning, msg, path, method, line);
-
-    public static void Error(string msg, 
-    [CallerFilePath]string path = "", 
-    [CallerMemberName]string method="", 
-    [CallerLineNumber]int line = -1) => LogMessage(LogEventLevel.Error, msg, path, method, line);
-
-    public static void Debug(string msg, Exception e,
-    [CallerFilePath]string path = "", 
-    [CallerMemberName]string method="", 
-    [CallerLineNumber]int line = -1) => LogMessage(LogEventLevel.Debug, msg, e, path, method, line);
-
-    public static void Info(string msg, Exception e,
-    [CallerFilePath]string path = "", 
-    [CallerMemberName]string method="", 
-    [CallerLineNumber]int line = -1) => LogMessage(LogEventLevel.Information, msg, e, path, method, line);
-
-    public static void Warning(string msg, Exception e, 
-    [CallerFilePath]string path = "", 
-    [CallerMemberName]string method="", 
-    [CallerLineNumber]int line = -1) => LogMessage(LogEventLevel.Warning, msg, e, path, method, line);
-
-    public static void Error(string msg, Exception e, 
-    [CallerFilePath]string path = "", 
-    [CallerMemberName]string method="", 
-    [CallerLineNumber]int line = -1) => LogMessage(LogEventLevel.Error, msg, e, path, method, line);
-
-    public static void LogMessage(LogEventLevel level, string msg, 
-    [CallerFilePath]string path = "", 
-    [CallerMemberName]string method="", 
-    [CallerLineNumber]int line = -1) {
-        using (LogContext.PushProperty("Class", Path.GetFileNameWithoutExtension(path))) {
-            using (LogContext.PushProperty("Method", method)) {
-                using (LogContext.PushProperty("LineNum", line)) {
-                    _logger.Write(level, msg);
-                }
-            }
-        }
+    /// <summary>
+    /// Closes logging, making sure to close any log files and flush queues
+    /// </summary>
+    public static void Close()
+    {
+        (LoggingInterface as IDisposable)?.Dispose();
     }
 
-    public static void LogMessage(LogEventLevel level, string msg, Exception e,
-    [CallerFilePath]string path = "", 
-    [CallerMemberName]string method="", 
-    [CallerLineNumber]int line = -1) {
-        using (LogContext.PushProperty("Class", Path.GetFileNameWithoutExtension(path))) {
-            using (LogContext.PushProperty("Method", method)) {
-                using (LogContext.PushProperty("LineNum", line)) {
-                    _logger.Write(level, msg, e);
-                }
-            }
+    /// <summary>
+    /// Logs a <see cref="LogEventLevel.Verbose"/> message
+    /// </summary>
+    /// <param name="message">the message to log</param>
+    /// <param name="methodName">the calling method name, auto populated by <see cref="CallerMemberNameAttribute"/></param>
+    /// <param name="filePath">the file the calling code came from, auto populated by <see cref="CallerFilePathAttribute"/></param>
+    /// <param name="lineNumber">the line number from which the log came from, auto populated by <see cref="CallerLineNumberAttribute"/></param>
+    public static void Verbose(string message, 
+        [CallerMemberName]string methodName = "", 
+        [CallerFilePath]string filePath = "",
+        [CallerLineNumber]int lineNumber = -1)
+        => LogMessage(LogEventLevel.Verbose, message, methodName, filePath, lineNumber);
+    
+    
+    /// <summary>
+    /// Logs a <see cref="LogEventLevel.Verbose"/> message with an exception
+    /// </summary>
+    /// <param name="message">the message to log</param>
+    /// <param name="ex">the exception to also log</param>
+    /// <param name="methodName">the calling method name, auto populated by <see cref="CallerMemberNameAttribute"/></param>
+    /// <param name="filePath">the file the calling code came from, auto populated by <see cref="CallerFilePathAttribute"/></param>
+    /// <param name="lineNumber">the line number from which the log came from, auto populated by <see cref="CallerLineNumberAttribute"/></param>
+    public static void Verbose(string message, Exception? ex, 
+        [CallerMemberName]string methodName = "", 
+        [CallerFilePath]string filePath = "",
+        [CallerLineNumber]int lineNumber = -1)
+        => LogMessage(LogEventLevel.Verbose, message, ex, methodName, filePath, lineNumber);
+    
+    /// <summary>
+    /// Logs a <see cref="LogEventLevel.Debug"/> message
+    /// </summary>
+    /// <param name="message">the message to log</param>
+    /// <param name="methodName">the calling method name, auto populated by <see cref="CallerMemberNameAttribute"/></param>
+    /// <param name="filePath">the file the calling code came from, auto populated by <see cref="CallerFilePathAttribute"/></param>
+    /// <param name="lineNumber">the line number from which the log came from, auto populated by <see cref="CallerLineNumberAttribute"/></param>
+    public static void Debug(string message, 
+        [CallerMemberName]string methodName = "", 
+        [CallerFilePath]string filePath = "",
+        [CallerLineNumber]int lineNumber = -1)
+        => LogMessage(LogEventLevel.Debug, message, methodName, filePath, lineNumber);
+    
+    /// <summary>
+    /// Logs a <see cref="LogEventLevel.Debug"/> message with an exception
+    /// </summary>
+    /// <param name="message">the message to log</param>
+    /// <param name="ex">the exception to also log</param>
+    /// <param name="methodName">the calling method name, auto populated by <see cref="CallerMemberNameAttribute"/></param>
+    /// <param name="filePath">the file the calling code came from, auto populated by <see cref="CallerFilePathAttribute"/></param>
+    /// <param name="lineNumber">the line number from which the log came from, auto populated by <see cref="CallerLineNumberAttribute"/></param>
+    public static void Debug(string message, Exception? ex, 
+        [CallerMemberName]string methodName = "", 
+        [CallerFilePath]string filePath = "",
+        [CallerLineNumber]int lineNumber = -1)
+        => LogMessage(LogEventLevel.Debug, message, ex, methodName, filePath, lineNumber);
+    
+    /// <summary>
+    /// Logs a <see cref="LogEventLevel.Information"/> message
+    /// </summary>
+    /// <param name="message">the message to log</param>
+    /// <param name="methodName">the calling method name, auto populated by <see cref="CallerMemberNameAttribute"/></param>
+    /// <param name="filePath">the file the calling code came from, auto populated by <see cref="CallerFilePathAttribute"/></param>
+    /// <param name="lineNumber">the line number from which the log came from, auto populated by <see cref="CallerLineNumberAttribute"/></param>
+    public static void Info(string message, 
+        [CallerMemberName]string methodName = "", 
+        [CallerFilePath]string filePath = "",
+        [CallerLineNumber]int lineNumber = -1)
+        => LogMessage(LogEventLevel.Information, message, methodName, filePath, lineNumber);
+
+    /// <summary>
+    /// Logs a <see cref="LogEventLevel.Information"/> message with an exception
+    /// </summary>
+    /// <param name="message">the message to log</param>
+    /// <param name="ex">the exception to also log</param>
+    /// <param name="methodName">the calling method name, auto populated by <see cref="CallerMemberNameAttribute"/></param>
+    /// <param name="filePath">the file the calling code came from, auto populated by <see cref="CallerFilePathAttribute"/></param>
+    /// <param name="lineNumber">the line number from which the log came from, auto populated by <see cref="CallerLineNumberAttribute"/></param>
+    public static void Info(string message, Exception? ex,
+        [CallerMemberName] string methodName = "",
+        [CallerFilePath] string filePath = "",
+        [CallerLineNumber] int lineNumber = -1)
+        => LogMessage(LogEventLevel.Information, message, ex, methodName, filePath, lineNumber);
+    
+    /// <summary>
+    /// Logs a <see cref="LogEventLevel.Warning"/> message
+    /// </summary>
+    /// <param name="message">the message to log</param>
+    /// <param name="methodName">the calling method name, auto populated by <see cref="CallerMemberNameAttribute"/></param>
+    /// <param name="filePath">the file the calling code came from, auto populated by <see cref="CallerFilePathAttribute"/></param>
+    /// <param name="lineNumber">the line number from which the log came from, auto populated by <see cref="CallerLineNumberAttribute"/></param>
+    public static void Warning(string message, 
+        [CallerMemberName]string methodName = "", 
+        [CallerFilePath]string filePath = "",
+        [CallerLineNumber]int lineNumber = -1)
+        => LogMessage(LogEventLevel.Warning, message, methodName, filePath, lineNumber);
+
+    /// <summary>
+    /// Logs a <see cref="LogEventLevel.Warning"/> message with an exception
+    /// </summary>
+    /// <param name="message">the message to log</param>
+    /// <param name="ex">the exception to also log</param>
+    /// <param name="methodName">the calling method name, auto populated by <see cref="CallerMemberNameAttribute"/></param>
+    /// <param name="filePath">the file the calling code came from, auto populated by <see cref="CallerFilePathAttribute"/></param>
+    /// <param name="lineNumber">the line number from which the log came from, auto populated by <see cref="CallerLineNumberAttribute"/></param>
+    public static void Warning(string message, Exception? ex,
+        [CallerMemberName] string methodName = "",
+        [CallerFilePath] string filePath = "",
+        [CallerLineNumber] int lineNumber = -1)
+        => LogMessage(LogEventLevel.Warning, message, ex, methodName, filePath, lineNumber);
+    
+    /// <summary>
+    /// Logs a <see cref="LogEventLevel.Error"/> message
+    /// </summary>
+    /// <param name="message">the message to log</param>
+    /// <param name="methodName">the calling method name, auto populated by <see cref="CallerMemberNameAttribute"/></param>
+    /// <param name="filePath">the file the calling code came from, auto populated by <see cref="CallerFilePathAttribute"/></param>
+    /// <param name="lineNumber">the line number from which the log came from, auto populated by <see cref="CallerLineNumberAttribute"/></param>
+    public static void Error(string message, 
+        [CallerMemberName]string methodName = "", 
+        [CallerFilePath]string filePath = "",
+        [CallerLineNumber]int lineNumber = -1)
+        => LogMessage(LogEventLevel.Error, message, methodName, filePath, lineNumber);
+
+    /// <summary>
+    /// Logs a <see cref="LogEventLevel.Error"/> message with an exception
+    /// </summary>
+    /// <param name="message">the message to log</param>
+    /// <param name="ex">the exception to also log</param>
+    /// <param name="methodName">the calling method name, auto populated by <see cref="CallerMemberNameAttribute"/></param>
+    /// <param name="filePath">the file the calling code came from, auto populated by <see cref="CallerFilePathAttribute"/></param>
+    /// <param name="lineNumber">the line number from which the log came from, auto populated by <see cref="CallerLineNumberAttribute"/></param>
+    public static void Error(string message, Exception? ex,
+        [CallerMemberName] string methodName = "",
+        [CallerFilePath] string filePath = "",
+        [CallerLineNumber] int lineNumber = -1)
+        => LogMessage(LogEventLevel.Error, message, ex, methodName, filePath, lineNumber);
+    
+    /// <summary>
+    /// Logs a <see cref="LogEventLevel.Fatal"/> message
+    /// </summary>
+    /// <param name="message">the message to log</param>
+    /// <param name="methodName">the calling method name, auto populated by <see cref="CallerMemberNameAttribute"/></param>
+    /// <param name="filePath">the file the calling code came from, auto populated by <see cref="CallerFilePathAttribute"/></param>
+    /// <param name="lineNumber">the line number from which the log came from, auto populated by <see cref="CallerLineNumberAttribute"/></param>
+    public static void Fatal(string message, 
+        [CallerMemberName]string methodName = "", 
+        [CallerFilePath]string filePath = "",
+        [CallerLineNumber]int lineNumber = -1)
+        => LogMessage(LogEventLevel.Fatal, message, methodName, filePath, lineNumber);
+
+    /// <summary>
+    /// Logs a <see cref="LogEventLevel.Fatal"/> message with an exception
+    /// </summary>
+    /// <param name="message">the message to log</param>
+    /// <param name="ex">the exception to also log</param>
+    /// <param name="methodName">the calling method name, auto populated by <see cref="CallerMemberNameAttribute"/></param>
+    /// <param name="filePath">the file the calling code came from, auto populated by <see cref="CallerFilePathAttribute"/></param>
+    /// <param name="lineNumber">the line number from which the log came from, auto populated by <see cref="CallerLineNumberAttribute"/></param>
+    public static void Fatal(string message, Exception? ex,
+        [CallerMemberName] string methodName = "",
+        [CallerFilePath] string filePath = "",
+        [CallerLineNumber] int lineNumber = -1)
+        => LogMessage(LogEventLevel.Fatal, message, ex, methodName, filePath, lineNumber);
+
+    /// <summary>
+    /// Logs a message to the given <see cref="logLevel"/>
+    /// </summary>
+    /// <param name="logLevel">the <see cref="LogEventLevel"/> to log to</param>
+    /// <param name="message">the message to log</param>
+    /// <param name="methodName">the calling method name, auto populated by <see cref="CallerMemberNameAttribute"/></param>
+    /// <param name="filePath">the file the calling code came from, auto populated by <see cref="CallerFilePathAttribute"/></param>
+    /// <param name="lineNumber">the line number from which the log came from, auto populated by <see cref="CallerLineNumberAttribute"/></param>
+    public static void LogMessage(LogEventLevel logLevel, string message,
+        [CallerMemberName] string methodName = "",
+        [CallerFilePath] string filePath = "",
+        [CallerLineNumber] int lineNumber = -1)
+        => LogMessage(logLevel, message, null, methodName, filePath, lineNumber);
+
+    /// <summary>
+    /// Logs a message and an exception to the given <see cref="logLevel"/>
+    /// </summary>
+    /// <param name="logLevel">the <see cref="LogEventLevel"/> to log to</param>
+    /// <param name="message">the message to log</param>
+    /// <param name="ex">the exception to also log</param>
+    /// <param name="methodName">the calling method name, auto populated by <see cref="CallerMemberNameAttribute"/></param>
+    /// <param name="filePath">the file the calling code came from, auto populated by <see cref="CallerFilePathAttribute"/></param>
+    /// <param name="lineNumber">the line number from which the log came from, auto populated by <see cref="CallerLineNumberAttribute"/></param>
+    public static void LogMessage(LogEventLevel logLevel, string message, Exception? ex, 
+        [CallerMemberName]string methodName = "", 
+        [CallerFilePath]string filePath = "",
+        [CallerLineNumber]int lineNumber = -1)
+    {
+        using (LogContext.PushProperty("File", Path.GetFileNameWithoutExtension(filePath)))
+        using (LogContext.PushProperty("Method", methodName))
+        using (LogContext.PushProperty("Line", lineNumber))
+        {
+            LoggingInterface?.Write(logLevel, ex, message);
         }
     }
 }

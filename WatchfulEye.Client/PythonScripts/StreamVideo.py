@@ -14,8 +14,8 @@ def StreamCamera(width, height, framerate, server, port, recordTime):
     client_socket.connect((server, port))
     # Make a file-like object out of the connection
     connection = client_socket.makefile('wb')
+    camera = picamera.PiCamera()
     try:
-        camera = picamera.PiCamera()
         camera.resolution = (width, height)
         camera.framerate = framerate
         camera.start_preview()
@@ -23,8 +23,6 @@ def StreamCamera(width, height, framerate, server, port, recordTime):
         time.sleep(2)
         camera.start_recording(connection, format='mjpeg')
         camera.wait_recording(recordTime)
-        camera.stop_recording()
-        camera.stop_preview()
         
     finally:
         camera.stop_recording()

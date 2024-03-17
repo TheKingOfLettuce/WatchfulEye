@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using NetMQ;
+using NetMQ.Monitoring;
 using NetMQ.Sockets;
 using WatchfulEye.Shared.MessageLibrary;
 using WatchfulEye.Shared.MessageLibrary.MessageHandlers;
@@ -17,6 +18,7 @@ public class EyeBall : IDisposable {
     private DealerSocket _client;
     private ZeroMQMessageHandler _handler;
     private NetMQPoller _poller;
+    private NetMQMonitor _monitor;
 
     private string? _socketIP;
     
@@ -40,16 +42,41 @@ public class EyeBall : IDisposable {
     public void SocketEye() {
         UdpClient client = new UdpClient();
         client.EnableBroadcast = true;
+        // 10 second receive timeout
+        client.Client.ReceiveTimeout = 10000;
         Logging.Debug("Attempting to socket eye");
 
-        // send register
-        byte[] msgData = new RegisterEyeMessage(EyeName).ToData();
-        client.Send(new RegisterEyeMessage(EyeName).ToData(), msgData.Length, new IPEndPoint(IPAddress.Broadcast, 8888));
+        byte[] receiveData = null;
+        const int Retry_Count = 10;
+        int numRetries = 0;
+        while (true) {
+            try {
+                // send register
+                Logging.Info("Sending Registration for EyeBall");
+                byte[] msgData = new RegisterEyeMessage(EyeName).ToData();
+                client.Send(new RegisterEyeMessage(EyeName).ToData(), msgData.Length, new IPEndPoint(IPAddress.Broadcast, 8888));
 
-        // attempt receive ack
-        IPEndPoint serverIP = new IPEndPoint(IPAddress.Any, 0);
-        byte[] receiveData = client.Receive(ref serverIP);
-        Logging.Debug("Received message from network discover");
+                // attempt receive ack
+                Logging.Info("Waiting for Registration Acknowledgement");
+                IPEndPoint serverIP = new IPEndPoint(IPAddress.Any, 0);
+                receiveData = client.Receive(ref serverIP);
+                Logging.Debug("Received message from network discover");
+                break;
+            }
+            catch (SocketException e) {
+                Logging.Error($"Socket exception with code [{e.ErrorCode}]", e);
+            }
+
+            if (numRetries == Retry_Count) {
+                Logging.Fatal($"Registration exceeded retries [{Retry_Count}], not trying again");
+                return;
+            }
+
+            Logging.Warning($"Registration attempt #{numRetries} failed, attempting again");
+            numRetries++;
+        }
+        
+        
 
         // decode ack
         (MessageCodes, string) receiveMsg = MessageFactory.GetMessageData(receiveData);
