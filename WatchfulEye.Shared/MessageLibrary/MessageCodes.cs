@@ -6,5 +6,6 @@ public enum MessageCodes : byte {
     REGISTER_EYE_ACK,
     REQUEST_STREAM,
     HEARTBEAT,
-    HEARTBEAT_ACK
+    HEARTBEAT_ACK,
+    DEREGISTER_EYE
 }

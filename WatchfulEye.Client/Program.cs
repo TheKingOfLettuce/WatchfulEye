@@ -8,7 +8,8 @@ internal static class Program {
         Logging.Debug("Creating eyeball");
         using EyeBall eye = new EyeBall(args[0]);
         eye.SocketEye();
-        await Block();
+        eye.DisconnectedWaiter.WaitOne();
+        Logging.Debug("Shutting program down");
     }
 
     public static async Task Block() {

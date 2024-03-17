@@ -21,6 +21,15 @@ public class ZeroMQMessageHandler : MessageHandlerBase {
             case MessageCodes.REQUEST_STREAM:
                 Publish(MessageFactory.DeserializeMsg<RequestStreamMessage>(msgData.Item2));
                 break;
+            case MessageCodes.HEARTBEAT:
+                Publish(MessageFactory.DeserializeMsg<HeartbeatMessage>(msgData.Item2));
+                break;
+            case MessageCodes.HEARTBEAT_ACK:
+                Publish(MessageFactory.DeserializeMsg<HeartbeatAckMessage>(msgData.Item2));
+                break;
+            case MessageCodes.DEREGISTER_EYE:
+                Publish(MessageFactory.DeserializeMsg<DeRegisterEyeMessage>(msgData.Item2));
+                break;
         }
 
         return;

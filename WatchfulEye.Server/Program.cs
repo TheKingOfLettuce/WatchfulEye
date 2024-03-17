@@ -9,13 +9,12 @@ using WatchfulEye.Utility;
 namespace WatchfulEye;
 
 internal static class Program {
-    private static EyeManager _eyes;
 
     public static async Task Main(string[] args) {
         Logging.Info("Starting the WatchfulEye");
-        _eyes = new EyeManager();
+        EyeManager.StartNetworkDiscovery();
         await ConsoleStuff();
-        _eyes.Dispose();
+        EyeManager.Dispose();
     }
 
     public static async Task ConsoleStuff() {
@@ -30,7 +29,7 @@ internal static class Program {
             
             switch (userResp) {
                 case 1:
-                    _eyes.ViewAllVision();
+                    EyeManager.ViewAllVision();
                     break;
                 case 0:
                     Logging.Debug("Quitting server");
