@@ -100,6 +100,14 @@ public class EyeBall : IDisposable {
         _socketIP = msg.ServerIP;
     }
 
+    private async Task HearbeatLoop() {
+        while (true) {
+            _client.SendFrame(new HeartbeatMessage().ToData(), 5);
+            
+        }
+    }
+
+    #region Stream
     private void HandleStreamRequest(RequestStreamMessage message) {
         Logging.Info($"Got Stream Request: {message.StreamLength}");
         Task.Run(() => StreamVideo(message));
@@ -135,6 +143,7 @@ public class EyeBall : IDisposable {
         await pythonStream.WaitForExitAsync();
         Logging.Debug("Python stream finished");
     }
+    #endregion
 
     public void Dispose() {
         GC.SuppressFinalize(this);
