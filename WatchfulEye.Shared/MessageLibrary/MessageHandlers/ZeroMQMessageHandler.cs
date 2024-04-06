@@ -4,11 +4,21 @@ using WatchfulEye.Shared.MessageLibrary.Messages;
 namespace WatchfulEye.Shared.MessageLibrary.MessageHandlers;
 
 public class ZeroMQMessageHandler : MessageHandlerBase {
+
+    /// <summary>
+    /// Callback method for ZeroMQ sockets when data is received
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="args"></param>
     public void HandleMessageReceived(object? sender, NetMQSocketEventArgs args) {
         byte[] data = args.Socket.ReceiveFrameBytes();
         HandleMessage(data);
     }
 
+    /// <summary>
+    /// Handle converting the raw message data into a <see cref="BaseMessage"/> to publish
+    /// </summary>
+    /// <param name="data">the raw message data</param>
     private void HandleMessage(byte[] data) {
         (MessageCodes, string) msgData = MessageFactory.GetMessageData(data);
         switch(msgData.Item1) {

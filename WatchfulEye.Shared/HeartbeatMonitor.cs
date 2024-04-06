@@ -4,6 +4,9 @@ using WatchfulEye.Shared.MessageLibrary.Messages;
 
 namespace WatchfulEye.Shared;
 
+/// <summary>
+/// Checks the pulse of who we are talking to
+/// </summary>
 public class HeartbeatMonitor : IDisposable {
     public event Action OnHeartBeat;
     public event Action OnHeartBeatFail;
@@ -29,6 +32,9 @@ public class HeartbeatMonitor : IDisposable {
         _nextAckTime = TimeSpan.FromSeconds(nextAck);
     }
 
+    /// <summary>
+    /// Starts our Heartbeat loop, ensuring only started once
+    /// </summary>
     public void StartMonitor() {
         if (_isActive) return;
 
@@ -40,6 +46,9 @@ public class HeartbeatMonitor : IDisposable {
         Task.Run(() => HearbeatLoop(cancel), _loopToken.Token);
     }
 
+    /// <summary>
+    /// Stops our heartbeat loop, does nothing if already stopped
+    /// </summary>
     public void StopMonitor() {
         if (!_isActive) return;
 
@@ -49,6 +58,10 @@ public class HeartbeatMonitor : IDisposable {
         _loopToken.Cancel();
     }
 
+    /// <summary>
+    /// Ours heartbeat loop, sending a heart beat message and waiting for an ack
+    /// </summary>
+    /// <param name="token">the cancel token to cancel gracefully</param>
     private async Task HearbeatLoop(CancellationToken token) {
         if (!_sendAckOnLoopStart)
             await Task.Delay(_nextAckTime);
@@ -77,15 +90,26 @@ public class HeartbeatMonitor : IDisposable {
         }
     }
 
+    /// <summary>
+    /// Handles sending the <see cref="HeartbeatMessage"/>
+    /// </summary>
+    /// <param name="message">the <see cref="HeartbeatMessage"/> to send</param>
     private void HandleHeartbeat(HeartbeatMessage message) {
         byte[] data = new HeartbeatAckMessage().ToData();
         _socket.SendFrame(data, data.Length);
     }
 
+    /// <summary>
+    /// Handles receiving a <see cref="HeartbeatAckMessage"/>
+    /// </summary>
+    /// <param name="message">the <see cref="HeartbeatAckMessage"/></param>
     private void HandleHeartbeatAck(HeartbeatAckMessage message) {
         _heartbeatAck.Set();
     }
 
+    /// <summary>
+    /// Handles canceling our monitor loop
+    /// </summary>
     public void Dispose() {
         GC.SuppressFinalize(this);
 

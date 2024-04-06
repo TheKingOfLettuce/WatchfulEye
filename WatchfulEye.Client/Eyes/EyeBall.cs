@@ -13,6 +13,9 @@ using WatchfulEye.Utility;
 
 namespace WatchfulEye.Client.Eyes;
 
+/// <summary>
+/// The eyes of our world
+/// </summary>
 public class EyeBall : IDisposable {
     public readonly AutoResetEvent DisconnectedWaiter;
     public readonly string EyeName;
@@ -45,27 +48,44 @@ public class EyeBall : IDisposable {
         Logging.Info($"New eye ball created {EyeName}");
     }
 
+    /// <summary>
+    /// Helper method to subscribe to all the messages we care about
+    /// </summary>
     private void SubscribeMessages() {
         _client.ReceiveReady += _handler.HandleMessageReceived;
 
         _handler.Subscribe<RequestStreamMessage>(HandleStreamRequest);
     }
 
+    /// <summary>
+    /// Method for when heartbeat fails
+    /// </summary>
     private void OnHeartBeatFail() {
         Logging.Fatal($"Heartbeat Failure");
         DisconnectedWaiter.Set();
     }
 
+    /// <summary>
+    /// Method for when heart beat "beats"
+    /// </summary>
     private void OnHeartBeat() {
         Logging.Debug("Received heartbeat from EyeSocket");
     }
 
     #region Stream
+    /// <summary>
+    /// Starts the video stream process when we receive a <see cref="RequestStreamMessage"/>
+    /// </summary>
+    /// <param name="message">the <see cref="RequestStreamMessage"/></param>
     private void HandleStreamRequest(RequestStreamMessage message) {
         Logging.Info($"Got Stream Request: {message.StreamLength}");
         Task.Run(() => StreamVideo(message));
     }
 
+    /// <summary>
+    /// Starts the python script that streams the PI camera video
+    /// </summary>
+    /// <param name="message">the <see cref="RequestStreamMessage"/> that has init data</param>
     private async Task StreamVideo(RequestStreamMessage message) {
         Logging.Debug($"Starting up a video stream python process");
         if (SocketIP == null) {
@@ -108,6 +128,11 @@ public class EyeBall : IDisposable {
         _heartBeat.Dispose();
     }
 
+    /// <summary>
+    /// Static method to get an <see cref="EyeBall"/> by attempting to socket with eye manager
+    /// </summary>
+    /// <param name="eyeName">the eye name to create with</param>
+    /// <returns>the <see cref="EyeBall"/> it socketed with, or null if failed to socket</returns>
     public static EyeBall? SocketEye(string eyeName) {
         using UdpClient client = new UdpClient();
         client.EnableBroadcast = true;

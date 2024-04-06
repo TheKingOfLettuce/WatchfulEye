@@ -6,6 +6,12 @@ using LibVLCSharp.Shared;
 using System.Net.Sockets;
 
 public static class VLCLauncer {
+
+    /// <summary>
+    /// Helper method to create a VLC stream to view live video from a <see cref="EyeSocket"/>
+    /// </summary>
+    /// <param name="eye">the eye socket with a live video stream</param>
+    /// <param name="delaySeconds">how long to hold the connection for</param>
     public static async Task ConnectToVision(EyeSocket eye, float delaySeconds) {
         Logging.Debug("Getting video data stream from eye");
         Stream? eyeVisionStream = await eye.GetDataStreamAsync();
@@ -18,6 +24,11 @@ public static class VLCLauncer {
         return;
     }
 
+    /// <summary>
+    /// Helper method to create a VLC stream
+    /// </summary>
+    /// <param name="videoStream">the stream of video data</param>
+    /// <param name="delaySeconds">how long to play the video stream for</param>
     public static async Task HostStream(Stream videoStream, float delaySeconds) {
         using var libvlc = new LibVLC();
         using StreamMediaInput input = new StreamMediaInput(videoStream);
