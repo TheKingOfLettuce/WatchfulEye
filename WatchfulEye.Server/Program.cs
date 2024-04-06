@@ -1,9 +1,7 @@
 ﻿using System.Net;
 using System.Net.Sockets;
-using LibVLCSharp.Shared;
 using WatchfulEye.Server;
 using WatchfulEye.Server.Eyes;
-using WatchfulEye.Shared.MessageLibrary.Messages;
 using WatchfulEye.Utility;
 
 namespace WatchfulEye;

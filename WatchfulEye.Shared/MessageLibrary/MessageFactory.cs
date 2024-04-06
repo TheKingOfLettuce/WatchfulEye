@@ -1,6 +1,5 @@
 using System.Text;
 using System.Text.Json;
-using NetMQ;
 using WatchfulEye.Shared.MessageLibrary.Messages;
 
 namespace WatchfulEye.Shared.MessageLibrary;

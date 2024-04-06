@@ -1,9 +1,7 @@
-using System.IO.Pipes;
 using System.Net;
 using System.Net.Sockets;
 using Serilog;
 using WatchfulEye.Utility;
-using WatchfulEye.Shared.MessageLibrary;
 using NetMQ.Sockets;
 using WatchfulEye.Shared.MessageLibrary.MessageHandlers;
 using NetMQ;

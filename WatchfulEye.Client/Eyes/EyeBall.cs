@@ -1,9 +1,7 @@
 using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
-using System.Runtime.InteropServices;
 using NetMQ;
-using NetMQ.Monitoring;
 using NetMQ.Sockets;
 using WatchfulEye.Shared;
 using WatchfulEye.Shared.MessageLibrary;

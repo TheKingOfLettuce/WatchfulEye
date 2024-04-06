@@ -9,7 +9,6 @@ using Serilog.Events;
 using System.Runtime.CompilerServices;
 using Serilog.Context;
 using Serilog.Core;
-using Serilog.Formatting.Json;
 
 public static class Logging
 {

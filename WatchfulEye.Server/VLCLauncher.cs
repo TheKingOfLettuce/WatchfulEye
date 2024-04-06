@@ -3,7 +3,6 @@ namespace WatchfulEye.Server;
 using WatchfulEye.Utility;
 using WatchfulEye.Server.Eyes;
 using LibVLCSharp.Shared;
-using System.Net.Sockets;
 
 public static class VLCLauncer {
 
