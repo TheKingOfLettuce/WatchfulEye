@@ -73,7 +73,10 @@ public class EyeBall : IDisposable {
                 break;
             }
             catch (SocketException e) {
-                Logging.Error($"Socket exception with code [{e.ErrorCode}]", e);
+                Logging.Error($"Socket exception with code [{e.SocketErrorCode}]", e);
+                if (e.SocketErrorCode != SocketError.TimedOut) {
+                    Thread.Sleep(TimeSpan.FromSeconds(10));
+                }
             }
 
             if (numRetries == Retry_Count) {

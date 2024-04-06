@@ -58,7 +58,7 @@ public class EyeSocket : IDisposable {
     }
 
     private void OnHeartBeat() {
-        Logging.Debug("Heartbeat from EyeBall");
+        Logging.Debug($"Heartbeat from EyeBall {_eyeName}");
     }
 
     public void StartVision() {
