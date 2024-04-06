@@ -17,14 +17,17 @@ public static class EyeManager {
         _networkDiscoverCancel = new CancellationTokenSource();
     }
 
-    public static void StartNetworkDiscovery() => Task.Run(NetworkDiscovery, _networkDiscoverCancel.Token);
+    public static void StartNetworkDiscovery() {
+        CancellationToken token = _networkDiscoverCancel.Token;
+        Task.Run(() => NetworkDiscovery(token), token);
+    }
 
-    public static async Task NetworkDiscovery() {
+    public static async Task NetworkDiscovery(CancellationToken token) {
         const int DiscoverPort = 8888;
         Logging.Debug($"Beginning network discovery on port {DiscoverPort}");
         UdpClient server = new UdpClient(DiscoverPort);
 
-        while (true) {
+        while (!token.IsCancellationRequested) {
             Logging.Debug("Waiting for Registration message in NetworkDiscovery");
             // wait for client message
             UdpReceiveResult clientResults = await server.ReceiveAsync();

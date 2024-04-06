@@ -5,6 +5,7 @@ using System.Runtime.InteropServices;
 using NetMQ;
 using NetMQ.Monitoring;
 using NetMQ.Sockets;
+using WatchfulEye.Shared;
 using WatchfulEye.Shared.MessageLibrary;
 using WatchfulEye.Shared.MessageLibrary.MessageHandlers;
 using WatchfulEye.Shared.MessageLibrary.Messages;
@@ -21,7 +22,7 @@ public class EyeBall : IDisposable {
     private NetMQPoller _poller;
 
     private string? _socketIP;
-    private AutoResetEvent _heartbeatAck;
+    private readonly HeartbeatMonitor _heartBeat;
     
     public EyeBall(string eyeName) {
         EyeName = eyeName;
@@ -31,17 +32,20 @@ public class EyeBall : IDisposable {
         SubscribeMessages();
         _poller.Add(_client);
         _poller.RunAsync();
-        Logging.Info($"New eye ball created {EyeName}");
-        _heartbeatAck = new AutoResetEvent(false);
+
+        _heartBeat = new HeartbeatMonitor(_client, _handler, 10, 10);
+        _heartBeat.OnHeartBeatFail += OnHeartBeatFail;
+        _heartBeat.OnHeartBeat += OnHeartBeat;
+
         DisconnectedWaiter = new AutoResetEvent(false);
+        
+        Logging.Info($"New eye ball created {EyeName}");
     }
 
     private void SubscribeMessages() {
         _client.ReceiveReady += _handler.HandleMessageReceived;
 
         _handler.Subscribe<RequestStreamMessage>(HandleStreamRequest);
-        _handler.Subscribe<HeartbeatAckMessage>(HandleHeartbeatAck);
-        _handler.Subscribe<HeartbeatMessage>(HandleHeartbeat);
     }
 
     public void SocketEye() {
@@ -96,8 +100,7 @@ public class EyeBall : IDisposable {
         // fully socket
         HandleRegisterEyeAck(ackMessage);
         client.Close();
-        Task.Run(HearbeatLoop);
-        
+        _heartBeat.StartMonitor();
     }
 
     private void HandleRegisterEyeAck(RegisterEyeAckMessage msg) {
@@ -108,34 +111,13 @@ public class EyeBall : IDisposable {
         _socketIP = msg.ServerIP;
     }
 
-    private async Task HearbeatLoop() {
-        Logging.Debug("Starting heartbeat loop");
-        byte[] heartbeatData = new HeartbeatMessage().ToData();
-        while (true) {
-            Logging.Debug("Sending heartbeat message");
-            _client.SendFrame(heartbeatData, heartbeatData.Length);
-            _heartbeatAck.Reset();
-            if (_heartbeatAck.WaitOne(TimeSpan.FromSeconds(5))) {
-                Logging.Debug("Heartbeat acknowledged, waiting another 30 seconds");
-                await Task.Delay(30000);
-            }
-            else {
-                Logging.Fatal($"Did not receive heart beat ack within 5 seconds");
-                DisconnectedWaiter.Set();
-                return;
-            }
-        }
+    private void OnHeartBeatFail() {
+        Logging.Fatal($"Heartbeat Failure");
+        DisconnectedWaiter.Set();
     }
 
-    private void HandleHeartbeat(HeartbeatMessage message) {
-        Logging.Debug("Eyeball received heartbeat, sending ack");
-        byte[] data = new HeartbeatAckMessage().ToData();
-        _client.SendFrame(data, data.Length);
-    }
-
-    private void HandleHeartbeatAck(HeartbeatAckMessage message) {
-        Logging.Debug("Received heart beat acknowledgement");
-        _heartbeatAck.Set();
+    private void OnHeartBeat() {
+        Logging.Debug("Received heartbeat from EyeSocket");
     }
 
     #region Stream
@@ -183,5 +165,6 @@ public class EyeBall : IDisposable {
         _poller.Dispose();
 
         _client.Dispose();
+        _heartBeat.Dispose();
     }
 }
