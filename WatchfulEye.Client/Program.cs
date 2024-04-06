@@ -6,8 +6,11 @@ namespace WatchfulEye.Client;
 internal static class Program {
     public static async Task Main(string[] args) {
         Logging.Debug("Creating eyeball");
-        using EyeBall eye = new EyeBall(args[0]);
-        eye.SocketEye();
+        using EyeBall? eye = EyeBall.SocketEye(args[0]);
+        if (eye == null) {
+            Logging.Error("Could not socket eye");
+            return;
+        }
         eye.DisconnectedWaiter.WaitOne();
         Logging.Debug("Shutting program down");
     }
