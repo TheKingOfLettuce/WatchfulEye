@@ -53,6 +53,7 @@ public class EyeBall : IDisposable {
         _client.ReceiveReady += _handler.HandleMessageReceived;
 
         _handler.Subscribe<RequestStreamMessage>(HandleStreamRequest);
+        _handler.Subscribe<RequestPictureMessage>(HandlePictureRequest);
     }
 
     /// <summary>
@@ -69,6 +70,37 @@ public class EyeBall : IDisposable {
     private void OnHeartBeat() {
         Logging.Debug("Received heartbeat from EyeSocket");
     }
+
+    #region Picture
+
+    private void HandlePictureRequest(RequestPictureMessage message) {
+        Logging.Info("Received Picture Request");
+        Task.Run(() => TakePicture(message));
+    }
+
+    private async Task TakePicture(RequestPictureMessage message) {
+        Logging.Debug("Starting up picture python process");
+        if (SocketIP == null) {
+            Logging.Error("Picture has been requested but current Socket IP is null");
+            return;
+        }
+
+        ProcessStartInfo startInfo = new ProcessStartInfo {
+            FileName = "python",
+            ArgumentList = {
+                Path.Combine(Directory.GetCurrentDirectory(), "PythonScripts", "TakePicture.py"),
+                message.PictureWidth.ToString(),
+                message.PictureHeight.ToString(),
+                SocketIP,
+                message.Port.ToString()
+            },
+            CreateNoWindow = false
+        };
+
+        await StartPythonProcess(startInfo);
+    }
+
+    #endregion
 
     #region Stream
     /// <summary>
@@ -105,16 +137,22 @@ public class EyeBall : IDisposable {
             CreateNoWindow = false
         };
 
-        Logging.Debug("Starting python stream");
-        using Process? pythonStream = Process.Start(startInfo);
-        if (pythonStream == null) {
-            Logging.Error("Failed to start python stream");
-            return;
-        }
-        await pythonStream.WaitForExitAsync();
-        Logging.Debug("Python stream finished");
+        await StartPythonProcess(startInfo);
     }
     #endregion
+
+    private async Task<bool> StartPythonProcess(ProcessStartInfo startInfo) {
+        Logging.Debug("Starting python process");
+        using Process? pythonStream = Process.Start(startInfo);
+        if (pythonStream == null) {
+            Logging.Error("Failed to start python process");
+            return false;
+        }
+
+        await pythonStream.WaitForExitAsync();
+        Logging.Debug("Python process finshed");
+        return true;
+    }
 
     public void Dispose() {
         GC.SuppressFinalize(this);

@@ -77,6 +77,24 @@ public class EyeSocket : IDisposable {
         Task.Run(() => VLCLauncer.ConnectToVision(this, streamMessage.StreamLength+5));
     }
 
+    public void RequestPicture() {
+        RequestPictureMessage request = new RequestPictureMessage(_connectionPoint.Port, 1280, 720);
+        Listen();
+        Task.Run(SaveCurrentView);
+        SendMessage(request);
+    }
+
+    private async void SaveCurrentView() {
+        using Stream? stream = await GetNetworkStreamAsync();
+        if (stream == null) {
+            Logging.Error("Failed to get network stream");
+            return;
+        }
+
+        using var fileStream = File.Create(Path.Combine(Directory.GetCurrentDirectory(),"Thumbnails", _eyeName+".jpg"));
+        await stream.CopyToAsync(fileStream);
+    }
+
     /// <summary>
     /// Handler method for when our heart beat fails
     /// </summary>
@@ -104,7 +122,7 @@ public class EyeSocket : IDisposable {
     /// Gets the data stream of our vision on the client
     /// </summary>
     /// <returns>the stream of vision data</returns>
-    public async Task<Stream?> GetDataStreamAsync() {
+    public async Task<Stream?> GetNetworkStreamAsync() {
         const int Time_Seconds = 10000;
         Logging.Debug($"Looking to accept a connection within {Time_Seconds/1000} seconds");
         CancellationTokenSource timeout = new CancellationTokenSource(Time_Seconds);

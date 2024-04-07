@@ -19,7 +19,8 @@ internal static class Program {
         int userResp = 0;
         while (userResp != -1) {
             Console.WriteLine("\n\nEnter an option below:\n");
-            Console.WriteLine("1. Test sending message to client");
+            Console.WriteLine("1. Request Stream from all eyes");
+            Console.WriteLine("2. Request Thumbnails from all eyes");
             Console.WriteLine("0. Quit");
 
             if (!int.TryParse(Console.ReadLine(), out userResp))
@@ -29,20 +30,13 @@ internal static class Program {
                 case 1:
                     EyeManager.ViewAllVision();
                     break;
+                case 2:
+                    EyeManager.GetLatestThumbnails();
+                    break;
                 case 0:
                     Logging.Debug("Quitting server");
                     return;
             }
         }
     }
-
-    public static async Task Test() {
-        IPEndPoint point = new IPEndPoint(IPAddress.Parse("0.0.0.0"), 8000);
-        Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-        socket.Bind(point);
-        socket.Listen();
-        Socket handle = await socket.AcceptAsync();
-        Stream dataStream = new NetworkStream(handle, true);
-        await VLCLauncer.HostStream(dataStream, 60);
-    } 
 }

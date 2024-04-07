@@ -14,12 +14,6 @@ internal static class Program {
         eye.DisconnectedWaiter.WaitOne();
         Logging.Debug("Shutting program down");
     }
-
-    public static async Task Block() {
-        Console.WriteLine("Press any key to quit");
-        Console.Read();
-        return;
-    }
 }
 
 

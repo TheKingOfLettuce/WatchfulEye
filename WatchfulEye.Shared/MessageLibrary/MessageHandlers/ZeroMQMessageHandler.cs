@@ -40,6 +40,12 @@ public class ZeroMQMessageHandler : MessageHandlerBase {
             case MessageCodes.DEREGISTER_EYE:
                 Publish(MessageFactory.DeserializeMsg<DeRegisterEyeMessage>(msgData.Item2));
                 break;
+            case MessageCodes.REQUEST_PICTURE:
+                Publish(MessageFactory.DeserializeMsg<RequestPictureMessage>(msgData.Item2));
+                break;
+            case MessageCodes.PICTURE:
+                Publish(MessageFactory.DeserializeMsg<PictureMessage>(msgData.Item2));
+                break;
         }
 
         return;

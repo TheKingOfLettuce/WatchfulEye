@@ -69,6 +69,15 @@ public static class EyeManager {
         }
     }
 
+    public static void GetLatestThumbnails() {
+        if (!Directory.Exists(Path.Combine(Directory.GetCurrentDirectory(), "Thumbnails")))
+            Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), "Thumbnails"));
+
+        foreach(EyeSocket socket in _eyeSockets.Values) {
+            socket.RequestPicture();
+        }
+    }
+
     /// <summary>
     /// Network discovery loop, waits for a registration message and sends an acknowledgement to fully socket eye
     /// </summary>
@@ -81,7 +90,13 @@ public static class EyeManager {
         while (!token.IsCancellationRequested) {
             Logging.Debug("Waiting for Registration message in NetworkDiscovery");
             // wait for client message
-            UdpReceiveResult clientResults = await server.ReceiveAsync();
+            UdpReceiveResult clientResults;
+            try {
+                clientResults = await server.ReceiveAsync(token);
+            }
+            catch (OperationCanceledException) {
+                break;
+            }
 
             Logging.Debug("Receieved data during NetoworkDisocery");
             // decode register message
@@ -105,6 +120,8 @@ public static class EyeManager {
             _eyeSocketPort += 2;
             Logging.Debug("Registration Acknowledgment sent");
         }
+
+        Logging.Debug("Network discovery has stopped its loop");
     }
 
     /// <summary>

@@ -13,7 +13,7 @@ public static class VLCLauncer {
     /// <param name="delaySeconds">how long to hold the connection for</param>
     public static async Task ConnectToVision(EyeSocket eye, float delaySeconds) {
         Logging.Debug("Getting video data stream from eye");
-        Stream? eyeVisionStream = await eye.GetDataStreamAsync();
+        Stream? eyeVisionStream = await eye.GetNetworkStreamAsync();
         if (eyeVisionStream == null) {
             Logging.Warning("Received null stream from eye vision");
             return;

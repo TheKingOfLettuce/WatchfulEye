@@ -7,5 +7,7 @@ public enum MessageCodes : byte {
     REQUEST_STREAM,
     HEARTBEAT,
     HEARTBEAT_ACK,
-    DEREGISTER_EYE
+    DEREGISTER_EYE,
+    REQUEST_PICTURE,
+    PICTURE
 }
