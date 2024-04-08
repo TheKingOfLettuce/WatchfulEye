@@ -5,7 +5,7 @@
             "name": "Run Server App",
             "type": "coreclr",
             "request": "launch",
-            "preLaunchTask": "BuildServer",
+            "preLaunchTask": "BuildServerApp",
             "program": "${workspaceFolder}/WatchfulEye.Server.App/bin/Debug/net7.0-windows/WatchfulEye.Server.App.exe",
             "args": [],
             "cwd": "${workspaceFolder}/WatchfulEye.Server",
