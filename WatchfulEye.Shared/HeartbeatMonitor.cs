@@ -8,8 +8,8 @@ namespace WatchfulEye.Shared;
 /// Checks the pulse of who we are talking to
 /// </summary>
 public class HeartbeatMonitor : IDisposable {
-    public event Action OnHeartBeat;
-    public event Action OnHeartBeatFail;
+    public event Action? OnHeartBeat;
+    public event Action? OnHeartBeatFail;
 
     private bool _sendAckOnLoopStart = false;
     private TimeSpan _timeoutTime;

@@ -23,31 +23,33 @@ public class ZeroMQMessageHandler : MessageHandlerBase {
         (MessageCodes, string) msgData = MessageFactory.GetMessageData(data);
         switch(msgData.Item1) {
             case MessageCodes.REGISTER_EYE:
-                Publish(MessageFactory.DeserializeMsg<RegisterEyeMessage>(msgData.Item2));
+                AttemptPublish<RegisterEyeMessage>(msgData.Item2);
                 break;
             case MessageCodes.REGISTER_EYE_ACK:
-                Publish(MessageFactory.DeserializeMsg<RegisterEyeAckMessage>(msgData.Item2));
+                AttemptPublish<RegisterEyeAckMessage>(msgData.Item2);
                 break;
             case MessageCodes.REQUEST_STREAM:
-                Publish(MessageFactory.DeserializeMsg<RequestStreamMessage>(msgData.Item2));
+                AttemptPublish<RequestStreamMessage>(msgData.Item2);
                 break;
             case MessageCodes.HEARTBEAT:
-                Publish(MessageFactory.DeserializeMsg<HeartbeatMessage>(msgData.Item2));
+                AttemptPublish<HeartbeatMessage>(msgData.Item2);
                 break;
             case MessageCodes.HEARTBEAT_ACK:
-                Publish(MessageFactory.DeserializeMsg<HeartbeatAckMessage>(msgData.Item2));
+                AttemptPublish<HeartbeatAckMessage>(msgData.Item2);
                 break;
             case MessageCodes.DEREGISTER_EYE:
-                Publish(MessageFactory.DeserializeMsg<DeRegisterEyeMessage>(msgData.Item2));
+                AttemptPublish<DeRegisterEyeMessage>(msgData.Item2);
                 break;
             case MessageCodes.REQUEST_PICTURE:
-                Publish(MessageFactory.DeserializeMsg<RequestPictureMessage>(msgData.Item2));
-                break;
-            case MessageCodes.PICTURE:
-                Publish(MessageFactory.DeserializeMsg<PictureMessage>(msgData.Item2));
+                AttemptPublish<RequestPictureMessage>(msgData.Item2);
                 break;
         }
+    }
 
-        return;
+    private void AttemptPublish<T>(string jsonMsg) where T : BaseMessage {
+        T? message = MessageFactory.DeserializeMsg<T>(jsonMsg);
+        if (message == default)
+            throw new Exception($"Failed to convert JSON data for message type {nameof(T)}");
+        Publish(message);
     }
 }

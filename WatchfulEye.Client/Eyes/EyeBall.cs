@@ -141,7 +141,7 @@ public class EyeBall : IDisposable {
     }
     #endregion
 
-    private async Task<bool> StartPythonProcess(ProcessStartInfo startInfo) {
+    private static async Task<bool> StartPythonProcess(ProcessStartInfo startInfo) {
         Logging.Debug("Starting python process");
         using Process? pythonStream = Process.Start(startInfo);
         if (pythonStream == null) {
@@ -216,7 +216,11 @@ public class EyeBall : IDisposable {
             Logging.Error("Received a message back that is not a register ack message, cannot proceed");
             throw new Exception("Failed to parse or receive ACK message");
         }
-        RegisterEyeAckMessage ackMessage = MessageFactory.DeserializeMsg<RegisterEyeAckMessage>(receiveMsg.Item2);
+        RegisterEyeAckMessage? ackMessage = MessageFactory.DeserializeMsg<RegisterEyeAckMessage>(receiveMsg.Item2);
+        if (ackMessage == default) {
+            Logging.Error("Received an Ack message that failed JSON parse");
+            throw new Exception("Failed to parse JSON Ack message");
+        }
 
         // fully socket
         client.Close();

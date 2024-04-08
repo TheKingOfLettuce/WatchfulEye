@@ -12,8 +12,8 @@ public static class EyeManager {
     public static IReadOnlyCollection<EyeSocket> EyeSockets => _eyeSockets.Values;
     private static Dictionary<string, EyeSocket> _eyeSockets;
 
-    public static event Action<EyeSocket> OnEyeSocketAdded;
-    public static event Action<EyeSocket> OnEyeSocketRemoved;
+    public static event Action<EyeSocket>? OnEyeSocketAdded;
+    public static event Action<EyeSocket>? OnEyeSocketRemoved;
 
     private static int _eyeSocketPort = 8001;
     private static CancellationTokenSource _networkDiscoverCancel;
@@ -105,14 +105,19 @@ public static class EyeManager {
             // decode register message
             (MessageCodes, string) msgData = MessageFactory.GetMessageData(clientResults.Buffer);
             if (msgData.Item1 != MessageCodes.REGISTER_EYE) {
-                Logging.Warning($"Network discovery received a message that wasn't a register message");
+                Logging.Error($"Network discovery received a message that wasn't a register message");
                 continue;
             }
 
             // handle register message
+            RegisterEyeMessage? register = MessageFactory.DeserializeMsg<RegisterEyeMessage>(msgData.Item2);
+            if (register == default) {
+                Logging.Error("Failed to parse JSON register message");
+                continue;
+            }
             string localIP = IPUtils.GetLocalIP();
-            if (!HandleRegisterEye(MessageFactory.DeserializeMsg<RegisterEyeMessage>(msgData.Item2), localIP, _eyeSocketPort)) {
-                Logging.Warning("Didn't register eye, not sending ack");
+            if (!HandleRegisterEye(register, localIP, _eyeSocketPort)) {
+                Logging.Error("Didn't register eye, not sending ack");
                 continue;
             }
             Logging.Debug("Eye socket created, sending register ack back");

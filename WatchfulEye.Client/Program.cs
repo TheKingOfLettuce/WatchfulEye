@@ -4,7 +4,7 @@ using WatchfulEye.Utility;
 namespace WatchfulEye.Client;
 
 internal static class Program {
-    public static async Task Main(string[] args) {
+    public static void Main(string[] args) {
         Logging.Debug("Creating eyeball");
         using EyeBall? eye = EyeBall.SocketEye(args[0]);
         if (eye == null) {

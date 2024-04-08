@@ -15,7 +15,7 @@ namespace WatchfulEye.Server.Eyes;
 /// </summary>
 public class EyeSocket : IDisposable {
     public string EyeName => _eyeName;
-    public event Action OnThumbnailSaved;
+    public event Action? OnThumbnailSaved;
 
     private readonly IPEndPoint _connectionPoint;
     private readonly Socket _mainSocket;
