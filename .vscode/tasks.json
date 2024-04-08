@@ -31,6 +31,16 @@
             ],
             "problemMatcher": "$msCompile"
         },
+        {
+            "label": "BuildServerApp",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/WatchfulEye.Server.App/WatchfulEye.Server.App.csproj"
+            ],
+            "problemMatcher": "$msCompile"
+        },
 
         {
             "label": "BuildClientLinux",

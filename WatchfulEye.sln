@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WatchfulEye.Utility", "Watc
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WatchfulEye.Shared", "WatchfulEye.Shared\WatchfulEye.Shared.csproj", "{3A85D656-15A3-4D87-9FC0-DD7B554A613E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WatchfulEye.Server.App", "WatchfulEye.Server.App\WatchfulEye.Server.App.csproj", "{73525E46-5AA3-42BB-9564-5C2886318095}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -36,5 +38,9 @@ Global
 		{3A85D656-15A3-4D87-9FC0-DD7B554A613E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3A85D656-15A3-4D87-9FC0-DD7B554A613E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3A85D656-15A3-4D87-9FC0-DD7B554A613E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{73525E46-5AA3-42BB-9564-5C2886318095}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{73525E46-5AA3-42BB-9564-5C2886318095}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{73525E46-5AA3-42BB-9564-5C2886318095}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{73525E46-5AA3-42BB-9564-5C2886318095}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

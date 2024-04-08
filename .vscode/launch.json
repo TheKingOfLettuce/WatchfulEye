@@ -2,11 +2,11 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Run Server",
+            "name": "Run Server App",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "BuildServer",
-            "program": "${workspaceFolder}/WatchfulEye.Server/bin/Debug/net7.0/WatchfulEye.Server.exe",
+            "program": "${workspaceFolder}/WatchfulEye.Server.App/bin/Debug/net7.0-windows/WatchfulEye.Server.App.exe",
             "args": [],
             "cwd": "${workspaceFolder}/WatchfulEye.Server",
             "console": "externalTerminal",

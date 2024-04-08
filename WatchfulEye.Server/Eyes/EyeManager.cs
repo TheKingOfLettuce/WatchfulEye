@@ -12,6 +12,9 @@ public static class EyeManager {
     public static IReadOnlyCollection<EyeSocket> EyeSockets => _eyeSockets.Values;
     private static Dictionary<string, EyeSocket> _eyeSockets;
 
+    public static event Action<EyeSocket> OnEyeSocketAdded;
+    public static event Action<EyeSocket> OnEyeSocketRemoved;
+
     private static int _eyeSocketPort = 8001;
     private static CancellationTokenSource _networkDiscoverCancel;
     private static bool _enabled;
@@ -74,7 +77,7 @@ public static class EyeManager {
             Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), "Thumbnails"));
 
         foreach(EyeSocket socket in _eyeSockets.Values) {
-            socket.RequestPicture();
+            socket.RequestThumbnail();
         }
     }
 
@@ -139,6 +142,7 @@ public static class EyeManager {
         }
         EyeSocket socket = new EyeSocket(ip, port, msg.EyeName);
         _eyeSockets.Add(msg.EyeName, socket);
+        OnEyeSocketAdded?.Invoke(socket);
         return true;
     }
 
@@ -155,6 +159,7 @@ public static class EyeManager {
 
         EyeSocket eye = _eyeSockets[message.EyeName];
         _eyeSockets.Remove(message.EyeName);
+        OnEyeSocketRemoved?.Invoke(eye);
         eye.Dispose();
     }
 

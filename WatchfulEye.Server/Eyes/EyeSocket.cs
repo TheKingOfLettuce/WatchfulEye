@@ -14,6 +14,9 @@ namespace WatchfulEye.Server.Eyes;
 /// The "Socket" for the EyeBalls out in the world
 /// </summary>
 public class EyeSocket : IDisposable {
+    public string EyeName => _eyeName;
+    public event Action OnThumbnailSaved;
+
     private readonly IPEndPoint _connectionPoint;
     private readonly Socket _mainSocket;
     private readonly HeartbeatMonitor _heartBeat;
@@ -77,14 +80,14 @@ public class EyeSocket : IDisposable {
         Task.Run(() => VLCLauncer.ConnectToVision(this, streamMessage.StreamLength+5));
     }
 
-    public void RequestPicture() {
+    public void RequestThumbnail() {
         RequestPictureMessage request = new RequestPictureMessage(_connectionPoint.Port, 1280, 720);
         Listen();
-        Task.Run(SaveCurrentView);
+        Task.Run(SaveThumbnail);
         SendMessage(request);
     }
 
-    private async void SaveCurrentView() {
+    private async void SaveThumbnail() {
         using Stream? stream = await GetNetworkStreamAsync();
         if (stream == null) {
             Logging.Error("Failed to get network stream");
@@ -93,6 +96,8 @@ public class EyeSocket : IDisposable {
 
         using var fileStream = File.Create(Path.Combine(Directory.GetCurrentDirectory(),"Thumbnails", _eyeName+".jpg"));
         await stream.CopyToAsync(fileStream);
+        fileStream.Close();
+        OnThumbnailSaved?.Invoke();
     }
 
     /// <summary>
