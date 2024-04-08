@@ -4,9 +4,11 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:local="clr-namespace:WatchfulEye.Server.App.Components"
+             xmlns:uc="clr-namespace:LibVLCSharp.WPF;assembly=LibVLCSharp.WPF"
              mc:Ignorable="d"
              d:DesignHeight="450" d:DesignWidth="800">
     <Grid>
         <Image Height="450" Width="800" Name="Thumbnail" Visibility="Hidden"/>
+        <uc:VideoView Height="450" Width="800" Name="Video" Visibility="Hidden"/>
     </Grid>
 </UserControl>

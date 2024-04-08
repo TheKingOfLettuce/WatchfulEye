@@ -77,7 +77,7 @@ public class EyeSocket : IDisposable {
         RequestStreamMessage streamMessage = new RequestStreamMessage(15, _connectionPoint.Port, 1280, 720);
         Listen();
         SendMessage(streamMessage);
-        Task.Run(() => VLCLauncer.ConnectToVision(this, streamMessage.StreamLength+5));
+        //Task.Run(() => VLCLauncer.ConnectToVision(this, streamMessage.StreamLength+5));
     }
 
     public void RequestThumbnail() {
