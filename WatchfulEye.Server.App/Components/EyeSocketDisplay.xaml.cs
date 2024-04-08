@@ -96,7 +96,7 @@ public partial class EyeSocketDisplay : UserControl
     {
         if (_eyeSocket == null || _showingStream) return;
         
-        _eyeSocket.StartVision();
+        _eyeSocket.RequestStream();
         Video.Visibility = Visibility.Visible;
         Task.Run(() => ConnectToVision(_eyeSocket, 15 + 5));
     }

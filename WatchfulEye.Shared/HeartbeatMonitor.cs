@@ -43,7 +43,7 @@ public class HeartbeatMonitor : IDisposable {
         _handler.Subscribe<HeartbeatAckMessage>(HandleHeartbeatAck);
 
         CancellationToken cancel = _loopToken.Token;
-        Task.Run(() => HearbeatLoop(cancel), _loopToken.Token);
+        Task.Run(() => HeartbeatLoop(cancel), _loopToken.Token);
     }
 
     /// <summary>
@@ -62,7 +62,7 @@ public class HeartbeatMonitor : IDisposable {
     /// Ours heartbeat loop, sending a heart beat message and waiting for an ack
     /// </summary>
     /// <param name="token">the cancel token to cancel gracefully</param>
-    private async Task HearbeatLoop(CancellationToken token) {
+    private async Task HeartbeatLoop(CancellationToken token) {
         if (!_sendAckOnLoopStart)
             await Task.Delay(_nextAckTime);
         byte[] heartbeatData = new HeartbeatMessage().ToData();
@@ -75,7 +75,7 @@ public class HeartbeatMonitor : IDisposable {
             if (_heartbeatAck.WaitOne(_timeoutTime)) {
                 // received ack from heartbeat
                 OnHeartBeat?.Invoke();
-                await Task.Delay(_nextAckTime);
+                await Task.Delay(_nextAckTime, token);
             }
             else {
                 // did not receive ack

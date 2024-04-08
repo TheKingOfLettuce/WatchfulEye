@@ -65,10 +65,10 @@ public static class EyeManager {
     /// <summary>
     /// Start the vision viewing process on all registered <see cref="EyeSocket"/>
     /// </summary>
-    /// <seealso cref="EyeSocket.StartVision"/>
+    /// <seealso cref="EyeSocket.RequestStream"/>
     public static void ViewAllVision() {
         foreach(EyeSocket socket in _eyeSockets.Values) {
-            socket.StartVision();
+            socket.RequestStream();
         }
     }
 

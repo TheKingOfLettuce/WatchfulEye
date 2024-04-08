@@ -73,11 +73,10 @@ public class EyeSocket : IDisposable {
     /// Starts the vision process by sending a <see cref="RequestStreamMessage"/> to the client
     /// and then passing ourselves to VLC for stream viewing
     /// </summary>
-    public void StartVision() {
+    public void RequestStream() {
         RequestStreamMessage streamMessage = new RequestStreamMessage(15, _connectionPoint.Port, 1280, 720);
         Listen();
         SendMessage(streamMessage);
-        //Task.Run(() => VLCLauncer.ConnectToVision(this, streamMessage.StreamLength+5));
     }
 
     public void RequestThumbnail() {
