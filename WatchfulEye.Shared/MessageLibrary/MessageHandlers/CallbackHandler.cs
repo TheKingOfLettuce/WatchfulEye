@@ -18,4 +18,8 @@ public class CallbackHandler<T> : CallbackHandlerBase where T : BaseMessage  {
     public void HandleMessage(T message) {
         _callbacks?.Invoke(message);
     }
+
+    public bool HasCallbacks() {
+        return _callbacks == null;
+    }
 }

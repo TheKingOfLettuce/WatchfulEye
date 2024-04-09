@@ -51,6 +51,13 @@ public class MessageHandlerBase {
 
         (_services[messageType] as CallbackHandler<T>).HandleMessage(message);
     }
+
+    public bool HasSubscribers<T>() where T : BaseMessage {
+        Type messageType = typeof(T);
+        if (!_services.ContainsKey(messageType)) return false;
+
+        return (_services[messageType] as CallbackHandler<T>).HasCallbacks();
+    }
 }
 
 #pragma warning restore CS8602

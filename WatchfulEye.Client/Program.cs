@@ -15,7 +15,3 @@ internal static class Program {
         Logging.Debug("Shutting program down");
     }
 }
-
-
-
-

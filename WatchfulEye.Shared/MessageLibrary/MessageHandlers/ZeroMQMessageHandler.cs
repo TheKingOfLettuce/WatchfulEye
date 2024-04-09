@@ -47,6 +47,8 @@ public class ZeroMQMessageHandler : MessageHandlerBase {
     }
 
     private void AttemptPublish<T>(string jsonMsg) where T : BaseMessage {
+        if (!HasSubscribers<T>()) return;
+
         T? message = MessageFactory.DeserializeMsg<T>(jsonMsg);
         if (message == default)
             throw new Exception($"Failed to convert JSON data for message type {nameof(T)}");
