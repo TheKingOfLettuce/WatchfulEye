@@ -20,7 +20,7 @@ public partial class EyeSocketDisplay : UserControl
     
     private EyeSocket? _eyeSocket;
     private CancellationTokenSource _loopCancel;
-    private LibVLC _vlc;
+    private static LibVLC _vlc = new LibVLC();
     private MediaPlayer _mediaPlayer;
     private bool _showingStream;
     
@@ -28,7 +28,6 @@ public partial class EyeSocketDisplay : UserControl
     {
         InitializeComponent();
         _loopCancel = new CancellationTokenSource();
-        _vlc = new LibVLC();
         _mediaPlayer = new MediaPlayer(_vlc);
         Video.Loaded += (sender, e) => Video.MediaPlayer = _mediaPlayer;
         Thumbnail.MouseLeftButtonDown += (sender, args) => ViewStream();
@@ -125,15 +124,18 @@ public partial class EyeSocketDisplay : UserControl
     /// <param name="videoStream">the stream of video data</param>
     /// <param name="delaySeconds">how long to play the video stream for</param>
     public async Task HostStream(Stream videoStream, float delaySeconds) {
-        using StreamMediaInput input = new StreamMediaInput(videoStream);
+        StreamMediaInput input = new StreamMediaInput(videoStream);
         Logging.Debug("Creating media from video stream");
-        using Media stream = new Media(_vlc, input);
+        Media stream = new Media(_vlc, input);
         Logging.Debug("Playing stream into player");
+        _mediaPlayer.Stopped += PlayerStopped;
         _mediaPlayer.Play(stream);
+    }
 
-        await Task.Delay((int)(delaySeconds * 1000));
-        Logging.Debug("Stopping stream player");
-        _mediaPlayer.Stop();
+    private void PlayerStopped(object? sender, EventArgs args) {
+        _mediaPlayer.Stopped -= PlayerStopped;
+        _mediaPlayer.Media?.Dispose();
+        Logging.Info($"Player stopped for Eye {_eyeSocket.EyeName}");
         Video.Dispatcher.Invoke(HideVideo);
     }
 

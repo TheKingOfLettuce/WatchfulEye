@@ -36,6 +36,7 @@ public class EyeSocket : IDisposable {
         _connectionPoint = new IPEndPoint(IPAddress.Parse("0.0.0.0"), port+1);
         _mainSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         _mainSocket.Bind(_connectionPoint);
+        _mainSocket.Listen();
 
         _server = new DealerSocket($"@tcp://{ip}:{port}");
         _handler = new ZeroMQMessageHandler();
@@ -75,15 +76,17 @@ public class EyeSocket : IDisposable {
     /// </summary>
     public void RequestStream() {
         RequestStreamMessage streamMessage = new RequestStreamMessage(15, _connectionPoint.Port, 1280, 720);
-        Listen();
         SendMessage(streamMessage);
     }
 
-    public void RequestThumbnail() {
-        RequestPictureMessage request = new RequestPictureMessage(_connectionPoint.Port, 1280, 720);
-        Listen();
-        Task.Run(SaveThumbnail);
+    public void RequestPicture(int width, int height) {
+        RequestPictureMessage request = new RequestPictureMessage(_connectionPoint.Port, width, height);
         SendMessage(request);
+    }
+
+    public void RequestThumbnail(int width = 1280, int height = 720) {
+        RequestPicture(width, height);
+        Task.Run(SaveThumbnail);
     }
 
     private async void SaveThumbnail() {
@@ -112,14 +115,6 @@ public class EyeSocket : IDisposable {
     /// </summary>
     private void OnHeartBeat() {
         Logging.Debug($"Heartbeat from EyeBall {_eyeName}");
-    }
-
-    /// <summary>
-    /// Starts listening on the port we defined for vision access on the client
-    /// </summary>
-    private void Listen() {
-        _mainSocket.Listen();
-        Logging.Debug($"EyeSocket is listening for vision");
     }
 
     /// <summary>

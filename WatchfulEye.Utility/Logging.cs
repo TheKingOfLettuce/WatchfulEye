@@ -33,6 +33,8 @@ public static class Logging
         #endif
 
         logConfig.WriteTo.Console(outputTemplate: template);
+        logConfig.WriteTo.File(Path.Combine(Directory.GetCurrentDirectory(), "Log.log"), 
+            outputTemplate: template, fileSizeLimitBytes: 1_000_000, retainedFileCountLimit: 3);
         logConfig.Enrich.FromLogContext();
         
         #if DEBUG

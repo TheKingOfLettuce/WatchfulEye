@@ -6,7 +6,8 @@
         xmlns:local="clr-namespace:WatchfulEye.Server.App"
         xmlns:components="clr-namespace:WatchfulEye.Server.App.Components"
         mc:Ignorable="d"
-        Title="MainWindow" Height="900" Width="1600">
+        Title="MainWindow" Height="900" Width="1600"
+        Background="DarkSlateBlue">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition />
