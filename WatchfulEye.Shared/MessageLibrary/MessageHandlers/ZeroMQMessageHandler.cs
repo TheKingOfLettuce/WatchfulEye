@@ -1,5 +1,6 @@
 using NetMQ;
 using WatchfulEye.Shared.MessageLibrary.Messages;
+using WatchfulEye.Shared.MessageLibrary.Messages.VisionRequests;
 
 namespace WatchfulEye.Shared.MessageLibrary.MessageHandlers;
 
@@ -42,6 +43,9 @@ public class ZeroMQMessageHandler : MessageHandlerBase {
                 break;
             case MessageCodes.REQUEST_PICTURE:
                 AttemptPublish<RequestPictureMessage>(msgData.Item2);
+                break;
+            case MessageCodes.VISION_READY:
+                AttemptPublish<VisionReadyMessage>(msgData.Item2);
                 break;
         }
     }

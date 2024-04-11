@@ -7,6 +7,7 @@ using WatchfulEye.Shared;
 using WatchfulEye.Shared.MessageLibrary;
 using WatchfulEye.Shared.MessageLibrary.MessageHandlers;
 using WatchfulEye.Shared.MessageLibrary.Messages;
+using WatchfulEye.Shared.MessageLibrary.Messages.VisionRequests;
 using WatchfulEye.Utility;
 
 namespace WatchfulEye.Client.Eyes;
@@ -22,6 +23,7 @@ public class EyeBall : IDisposable {
     private DealerSocket _client;
     private ZeroMQMessageHandler _handler;
     private NetMQPoller _poller;
+    private bool _isBusy;
 
     private readonly HeartbeatMonitor _heartBeat;
     
@@ -57,6 +59,15 @@ public class EyeBall : IDisposable {
     }
 
     /// <summary>
+    /// Sends a message to the connecting eye ball client
+    /// </summary>
+    /// <param name="message">the message to send</param>
+    public void SendMessage(BaseMessage message) {
+        byte[] messageData = message.ToData();
+        _client.SendFrame(messageData, messageData.Length);
+    }
+
+    /// <summary>
     /// Method for when heartbeat fails
     /// </summary>
     private void OnHeartBeatFail() {
@@ -75,6 +86,10 @@ public class EyeBall : IDisposable {
 
     private void HandlePictureRequest(RequestPictureMessage message) {
         Logging.Info("Received Picture Request");
+        if (_isBusy) {
+            Logging.Warning("Cannot take a picture, vision is currently busy");
+            return;
+        }
         Task.Run(() => TakePicture(message));
     }
 
@@ -97,7 +112,7 @@ public class EyeBall : IDisposable {
             CreateNoWindow = false
         };
 
-        await StartPythonProcess(startInfo);
+        await StartVisionProcess(startInfo, message);
     }
 
     #endregion
@@ -108,7 +123,11 @@ public class EyeBall : IDisposable {
     /// </summary>
     /// <param name="message">the <see cref="RequestStreamMessage"/></param>
     private void HandleStreamRequest(RequestStreamMessage message) {
-        Logging.Info($"Got Stream Request: {message.StreamLength}");
+        Logging.Info($"Got Stream Request");
+        if (_isBusy) {
+            Logging.Warning("Cannot stream video, vision is currently busy");
+            return;
+        }
         Task.Run(() => StreamVideo(message));
     }
 
@@ -137,11 +156,11 @@ public class EyeBall : IDisposable {
             CreateNoWindow = false
         };
 
-        await StartPythonProcess(startInfo);
+        await StartVisionProcess(startInfo, message);
     }
     #endregion
 
-    private static async Task<bool> StartPythonProcess(ProcessStartInfo startInfo) {
+    private async Task<bool> StartVisionProcess(ProcessStartInfo startInfo, VisionRequestMessage message) {
         Logging.Debug("Starting python process");
         using Process? pythonStream = Process.Start(startInfo);
         if (pythonStream == null) {
@@ -149,8 +168,11 @@ public class EyeBall : IDisposable {
             return false;
         }
 
+        _isBusy = true;
+        SendMessage(new VisionReadyMessage(message.VisionRequestType));
         await pythonStream.WaitForExitAsync();
         Logging.Debug("Python process finshed");
+        _isBusy = false;
         return true;
     }
 

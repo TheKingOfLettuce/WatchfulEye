@@ -20,6 +20,6 @@ public class CallbackHandler<T> : CallbackHandlerBase where T : BaseMessage  {
     }
 
     public bool HasCallbacks() {
-        return _callbacks == null;
+        return _callbacks != null;
     }
 }

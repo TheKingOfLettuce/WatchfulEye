@@ -9,5 +9,5 @@ public enum MessageCodes : byte {
     HEARTBEAT_ACK,
     DEREGISTER_EYE,
     REQUEST_PICTURE,
-    TOGGLE_BUSY
+    VISION_READY
 }

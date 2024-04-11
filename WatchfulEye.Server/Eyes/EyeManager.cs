@@ -63,25 +63,6 @@ public static class EyeManager {
     }
 
     /// <summary>
-    /// Start the vision viewing process on all registered <see cref="EyeSocket"/>
-    /// </summary>
-    /// <seealso cref="EyeSocket.RequestStream"/>
-    public static void ViewAllVision() {
-        foreach(EyeSocket socket in _eyeSockets.Values) {
-            socket.RequestStream();
-        }
-    }
-
-    public static void GetLatestThumbnails() {
-        if (!Directory.Exists(Path.Combine(Directory.GetCurrentDirectory(), "Thumbnails")))
-            Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), "Thumbnails"));
-
-        foreach(EyeSocket socket in _eyeSockets.Values) {
-            socket.RequestThumbnail();
-        }
-    }
-
-    /// <summary>
     /// Network discovery loop, waits for a registration message and sends an acknowledgement to fully socket eye
     /// </summary>
     /// <param name="token">the token to cancel our loop</param>

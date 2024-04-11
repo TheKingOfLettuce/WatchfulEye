@@ -1,9 +1,10 @@
 using System.Text.Json.Serialization;
 
-namespace WatchfulEye.Shared.MessageLibrary.Messages;
+namespace WatchfulEye.Shared.MessageLibrary.Messages.VisionRequests;
 
-public class RequestPictureMessage : BaseMessage {
+public class RequestPictureMessage : VisionRequestMessage {
     public override MessageCodes MessageCode => MessageCodes.REQUEST_PICTURE;
+    public override VisionRequestType VisionRequestType => VisionRequestType.Picture;
 
     [JsonInclude]
     public readonly int Port;

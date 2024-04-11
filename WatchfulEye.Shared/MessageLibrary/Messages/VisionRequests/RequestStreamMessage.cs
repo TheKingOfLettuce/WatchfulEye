@@ -1,9 +1,10 @@
 using System.Text.Json.Serialization;
 
-namespace WatchfulEye.Shared.MessageLibrary.Messages;
+namespace WatchfulEye.Shared.MessageLibrary.Messages.VisionRequests;
 
-public class RequestStreamMessage : BaseMessage {
+public class RequestStreamMessage : VisionRequestMessage {
     public override MessageCodes MessageCode => MessageCodes.REQUEST_STREAM;
+    public override VisionRequestType VisionRequestType => VisionRequestType.Stream;
 
     [JsonInclude]
     public readonly float StreamLength;

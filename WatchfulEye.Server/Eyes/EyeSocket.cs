@@ -6,6 +6,7 @@ using NetMQ.Sockets;
 using WatchfulEye.Shared.MessageLibrary.MessageHandlers;
 using NetMQ;
 using WatchfulEye.Shared.MessageLibrary.Messages;
+using WatchfulEye.Shared.MessageLibrary.Messages.VisionRequests;
 using WatchfulEye.Shared;
 
 namespace WatchfulEye.Server.Eyes;
@@ -15,7 +16,7 @@ namespace WatchfulEye.Server.Eyes;
 /// </summary>
 public class EyeSocket : IDisposable {
     public string EyeName => _eyeName;
-    public event Action? OnThumbnailSaved;
+    public event Action<VisionRequestType>? OnVisionReady;
 
     private readonly IPEndPoint _connectionPoint;
     private readonly Socket _mainSocket;
@@ -59,14 +60,16 @@ public class EyeSocket : IDisposable {
     /// </summary>
     private void SubscribeMessages() {
         _server.ReceiveReady += _handler.HandleMessageReceived;
+
+        _handler.Subscribe<VisionReadyMessage>(HandleVisionReady);
     }
 
     /// <summary>
     /// Sends a message to the connecting eye ball client
     /// </summary>
-    /// <param name="mesage">the message to send</param>
-    public void SendMessage(BaseMessage mesage) {
-        byte[] messageData = mesage.ToData();
+    /// <param name="message">the message to send</param>
+    public void SendMessage(BaseMessage message) {
+        byte[] messageData = message.ToData();
         _server.SendFrame(messageData, messageData.Length);
     }
 
@@ -84,22 +87,8 @@ public class EyeSocket : IDisposable {
         SendMessage(request);
     }
 
-    public void RequestThumbnail(int width = 1280, int height = 720) {
-        RequestPicture(width, height);
-        Task.Run(SaveThumbnail);
-    }
-
-    private async void SaveThumbnail() {
-        using Stream? stream = await GetNetworkStreamAsync();
-        if (stream == null) {
-            Logging.Error("Failed to get network stream");
-            return;
-        }
-
-        using var fileStream = File.Create(Path.Combine(Directory.GetCurrentDirectory(),"Thumbnails", _eyeName+".jpg"));
-        await stream.CopyToAsync(fileStream);
-        fileStream.Close();
-        OnThumbnailSaved?.Invoke();
+    private void HandleVisionReady(VisionReadyMessage message) {
+        OnVisionReady?.Invoke(message.RequestType);
     }
 
     /// <summary>
