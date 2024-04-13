@@ -52,6 +52,11 @@ public class MessageHandlerBase {
         (_services[messageType] as CallbackHandler<T>).HandleMessage(message);
     }
 
+    /// <summary>
+    /// Check to see if we have any subscribers to a message type
+    /// </summary>
+    /// <typeparam name="T">the message type to check</typeparam>
+    /// <returns>if we have any subscribers to a message type</returns>
     public bool HasSubscribers<T>() where T : BaseMessage {
         Type messageType = typeof(T);
         if (!_services.ContainsKey(messageType)) return false;

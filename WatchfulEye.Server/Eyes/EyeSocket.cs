@@ -8,23 +8,19 @@ using NetMQ;
 using WatchfulEye.Shared.MessageLibrary.Messages;
 using WatchfulEye.Shared.MessageLibrary.Messages.VisionRequests;
 using WatchfulEye.Shared;
+using WatchfulEye.Shared.MessageLibrary;
 
 namespace WatchfulEye.Server.Eyes;
 
 /// <summary>
 /// The "Socket" for the EyeBalls out in the world
 /// </summary>
-public class EyeSocket : IDisposable {
+public class EyeSocket : BaseMessageSender {
     public string EyeName => _eyeName;
     public event Action<VisionRequestType>? OnVisionReady;
 
     private readonly IPEndPoint _connectionPoint;
     private readonly Socket _mainSocket;
-    private readonly HeartbeatMonitor _heartBeat;
-
-    private DealerSocket _server;
-    private ZeroMQMessageHandler _handler;
-    private NetMQPoller _poller;
     private string _eyeName;
 
     /// <summary>
@@ -33,60 +29,43 @@ public class EyeSocket : IDisposable {
     /// <param name="ip">the ip address of the connection</param>
     /// <param name="port">the port of the connection</param>
     /// <param name="eyeName">the name of the eyeball</param>
-    public EyeSocket(string ip, int port, string eyeName) {
+    public EyeSocket(string ip, int port, string eyeName, bool isBind = true) : base(ip, port, isBind) {
+        _eyeName = eyeName;
+
         _connectionPoint = new IPEndPoint(IPAddress.Parse("0.0.0.0"), port+1);
         _mainSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         _mainSocket.Bind(_connectionPoint);
         _mainSocket.Listen();
-
-        _server = new DealerSocket($"@tcp://{ip}:{port}");
-        _handler = new ZeroMQMessageHandler();
-        _poller = new NetMQPoller();
-
-        SubscribeMessages();
-
-        _poller.Add(_server);
-        _poller.RunAsync();
-        _eyeName = eyeName;
-
-        _heartBeat = new HeartbeatMonitor(_server, _handler, 10, 10);
-        _heartBeat.OnHeartBeatFail += OnHeartBeatFail;
-        _heartBeat.OnHeartBeat += OnHeartBeat;
-        _heartBeat.StartMonitor();
     }
 
-    /// <summary>
-    /// A helper method to subscribe to all the messages we care about
-    /// </summary>
-    private void SubscribeMessages() {
-        _server.ReceiveReady += _handler.HandleMessageReceived;
 
+    protected override void SubscribeMessages() {
+        base.SubscribeMessages();
         _handler.Subscribe<VisionReadyMessage>(HandleVisionReady);
     }
 
     /// <summary>
-    /// Sends a message to the connecting eye ball client
-    /// </summary>
-    /// <param name="message">the message to send</param>
-    public void SendMessage(BaseMessage message) {
-        byte[] messageData = message.ToData();
-        _server.SendFrame(messageData, messageData.Length);
-    }
-
-    /// <summary>
-    /// Starts the vision process by sending a <see cref="RequestStreamMessage"/> to the client
-    /// and then passing ourselves to VLC for stream viewing
+    /// Request a video stream vision to the client
     /// </summary>
     public void RequestStream() {
         RequestStreamMessage streamMessage = new RequestStreamMessage(15, _connectionPoint.Port, 1280, 720);
         SendMessage(streamMessage);
     }
 
+    /// <summary>
+    /// Request a picture vision to the client
+    /// </summary>
+    /// <param name="width">the width of the picture</param>
+    /// <param name="height">the height of the picture</param>
     public void RequestPicture(int width, int height) {
         RequestPictureMessage request = new RequestPictureMessage(_connectionPoint.Port, width, height);
         SendMessage(request);
     }
 
+    /// <summary>
+    /// Callback for when client lets us know there is a vision connection ready
+    /// </summary>
+    /// <param name="message"></param>
     private void HandleVisionReady(VisionReadyMessage message) {
         OnVisionReady?.Invoke(message.RequestType);
     }
@@ -94,7 +73,7 @@ public class EyeSocket : IDisposable {
     /// <summary>
     /// Handler method for when our heart beat fails
     /// </summary>
-    private void OnHeartBeatFail() {
+    protected override void OnHeartBeatFail() {
         Logging.Error($"Heartbeat Failure");
         EyeManager.DeregisterEye(_eyeName);
     }
@@ -102,7 +81,7 @@ public class EyeSocket : IDisposable {
     /// <summary>
     /// Handler method for when our heat beat "beats"
     /// </summary>
-    private void OnHeartBeat() {
+    protected override void OnHeartBeat() {
         Logging.Debug($"Heartbeat from EyeBall {_eyeName}");
     }
 
@@ -128,17 +107,12 @@ public class EyeSocket : IDisposable {
     /// <summary>
     /// Disposes our socket, closing IPCs and heartbeats
     /// </summary>
-    public void Dispose() {
+    protected override void Dispose(bool fromDispose) {
         Logging.Debug($"Disposing {nameof(EyeSocket)}");
-        GC.SuppressFinalize(this);
+        base.Dispose(fromDispose);
+        if (!fromDispose) return;
 
         _mainSocket.Close();
         _mainSocket.Dispose();
-
-        _poller.Stop();
-        _poller.Dispose();
-
-        _server.Dispose();
-        _heartBeat.Dispose();
     }
 }

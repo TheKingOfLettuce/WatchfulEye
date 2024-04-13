@@ -1,11 +1,7 @@
 using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
-using NetMQ;
-using NetMQ.Sockets;
-using WatchfulEye.Shared;
 using WatchfulEye.Shared.MessageLibrary;
-using WatchfulEye.Shared.MessageLibrary.MessageHandlers;
 using WatchfulEye.Shared.MessageLibrary.Messages;
 using WatchfulEye.Shared.MessageLibrary.Messages.VisionRequests;
 using WatchfulEye.Utility;
@@ -15,35 +11,17 @@ namespace WatchfulEye.Client.Eyes;
 /// <summary>
 /// The eyes of our world
 /// </summary>
-public class EyeBall : IDisposable {
+public class EyeBall : BaseMessageSender {
     public readonly AutoResetEvent DisconnectedWaiter;
     public readonly string EyeName;
     public readonly string SocketIP;
 
-    private DealerSocket _client;
-    private ZeroMQMessageHandler _handler;
-    private NetMQPoller _poller;
     private bool _isBusy;
-
-    private readonly HeartbeatMonitor _heartBeat;
     
-    public EyeBall(string ip, int port, string eyeName) {
+    public EyeBall(string ip, int port, string eyeName, bool isBind = true) : base(ip, port, isBind) {
         EyeName = eyeName;
         SocketIP = ip;
-
-        _client = new DealerSocket($"tcp://{ip}:{port}");
-        _handler = new ZeroMQMessageHandler();
-        _poller = new NetMQPoller();
-        SubscribeMessages();
-        _poller.Add(_client);
-        _poller.RunAsync();
-
         DisconnectedWaiter = new AutoResetEvent(false);
-
-        _heartBeat = new HeartbeatMonitor(_client, _handler, 10, 10);
-        _heartBeat.OnHeartBeatFail += OnHeartBeatFail;
-        _heartBeat.OnHeartBeat += OnHeartBeat;
-        _heartBeat.StartMonitor();
         
         Logging.Info($"New eye ball created {EyeName}");
     }
@@ -51,26 +29,16 @@ public class EyeBall : IDisposable {
     /// <summary>
     /// Helper method to subscribe to all the messages we care about
     /// </summary>
-    private void SubscribeMessages() {
-        _client.ReceiveReady += _handler.HandleMessageReceived;
-
+    protected override void SubscribeMessages() {
+        base.SubscribeMessages();
         _handler.Subscribe<RequestStreamMessage>(HandleStreamRequest);
         _handler.Subscribe<RequestPictureMessage>(HandlePictureRequest);
     }
 
     /// <summary>
-    /// Sends a message to the connecting eye ball client
-    /// </summary>
-    /// <param name="message">the message to send</param>
-    public void SendMessage(BaseMessage message) {
-        byte[] messageData = message.ToData();
-        _client.SendFrame(messageData, messageData.Length);
-    }
-
-    /// <summary>
     /// Method for when heartbeat fails
     /// </summary>
-    private void OnHeartBeatFail() {
+    protected override void OnHeartBeatFail() {
         Logging.Fatal($"Heartbeat Failure");
         DisconnectedWaiter.Set();
     }
@@ -78,7 +46,7 @@ public class EyeBall : IDisposable {
     /// <summary>
     /// Method for when heart beat "beats"
     /// </summary>
-    private void OnHeartBeat() {
+    protected override void OnHeartBeat() {
         Logging.Debug("Received heartbeat from EyeSocket");
     }
 
@@ -176,16 +144,6 @@ public class EyeBall : IDisposable {
         return true;
     }
 
-    public void Dispose() {
-        GC.SuppressFinalize(this);
-
-        _poller.Stop();
-        _poller.Dispose();
-
-        _client.Dispose();
-        _heartBeat.Dispose();
-    }
-
     /// <summary>
     /// Static method to get an <see cref="EyeBall"/> by attempting to socket with eye manager
     /// </summary>
@@ -246,6 +204,6 @@ public class EyeBall : IDisposable {
 
         // fully socket
         client.Close();
-        return new EyeBall(ackMessage.ServerIP, ackMessage.Port, eyeName);
+        return new EyeBall(ackMessage.ServerIP, ackMessage.Port, eyeName, false);
     }
 }

@@ -1,4 +1,4 @@
-using NetMQ;
+using WatchfulEye.Shared.MessageLibrary;
 using WatchfulEye.Shared.MessageLibrary.MessageHandlers;
 using WatchfulEye.Shared.MessageLibrary.Messages;
 
@@ -16,14 +16,14 @@ public class HeartbeatMonitor : IDisposable {
     private TimeSpan _nextAckTime;
     private bool _isActive;
 
-    private readonly NetMQSocket _socket;
+    private readonly BaseMessageSender _sender;
     private readonly ZeroMQMessageHandler _handler;
     private readonly AutoResetEvent _heartbeatAck;
     
     private readonly CancellationTokenSource _loopToken;
 
-    public HeartbeatMonitor(NetMQSocket socket, ZeroMQMessageHandler handler, float timeout = 10, float nextAck = 60) {
-        _socket = socket;
+    public HeartbeatMonitor(BaseMessageSender sender, ZeroMQMessageHandler handler, float timeout = 10, float nextAck = 60) {
+        _sender = sender;
         _handler = handler;
         _heartbeatAck = new AutoResetEvent(false);
         _loopToken = new CancellationTokenSource();
@@ -65,9 +65,8 @@ public class HeartbeatMonitor : IDisposable {
     private async Task HeartbeatLoop(CancellationToken token) {
         if (!_sendAckOnLoopStart)
             await Task.Delay(_nextAckTime);
-        byte[] heartbeatData = new HeartbeatMessage().ToData();
         while (!token.IsCancellationRequested) {
-            if (!_socket.TrySendFrame(_timeoutTime, heartbeatData, heartbeatData.Length)) {
+            if (!_sender.SendMessage(new HeartbeatMessage(), _timeoutTime)) {
                 // heartbeat failed to send
                 break;
             }
@@ -95,8 +94,7 @@ public class HeartbeatMonitor : IDisposable {
     /// </summary>
     /// <param name="message">the <see cref="HeartbeatMessage"/> to send</param>
     private void HandleHeartbeat(HeartbeatMessage message) {
-        byte[] data = new HeartbeatAckMessage().ToData();
-        _socket.SendFrame(data, data.Length);
+        _sender.SendMessage(new HeartbeatAckMessage());
     }
 
     /// <summary>

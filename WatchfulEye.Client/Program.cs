@@ -13,5 +13,6 @@ internal static class Program {
         }
         eye.DisconnectedWaiter.WaitOne();
         Logging.Debug("Shutting program down");
+        Logging.Close();
     }
 }

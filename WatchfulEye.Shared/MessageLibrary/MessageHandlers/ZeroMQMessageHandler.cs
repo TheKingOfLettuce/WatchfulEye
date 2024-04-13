@@ -50,6 +50,11 @@ public class ZeroMQMessageHandler : MessageHandlerBase {
         }
     }
 
+    /// <summary>
+    /// Attempt to publish message, only deserializing and publishing if we have subscribers
+    /// </summary>
+    /// <param name="jsonMsg">the string JSON message data</param>
+    /// <typeparam name="T">the message type to send</typeparam>
     private void AttemptPublish<T>(string jsonMsg) where T : BaseMessage {
         if (!HasSubscribers<T>()) return;
 
