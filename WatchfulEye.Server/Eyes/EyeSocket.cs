@@ -77,6 +77,7 @@ public class EyeSocket : BaseMessageSender {
     /// Handler method for when our heat beat "beats"
     /// </summary>
     protected override void OnHeartBeat() {
+        base.OnHeartBeat();
         Logging.Debug($"Heartbeat from EyeBall {_eyeName}");
     }
 

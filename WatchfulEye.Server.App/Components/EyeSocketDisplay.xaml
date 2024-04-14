@@ -10,5 +10,6 @@
     <Grid>
         <Image Height="450" Width="800" Name="Thumbnail" Visibility="Hidden"/>
         <uc:VideoView Height="450" Width="800" Name="Video" Visibility="Hidden"/>
+        <Label Content="No Eye Connected" Name="StatusText" Width="Auto" FontSize="36" HorizontalAlignment="Center" Foreground="Red" VerticalAlignment="Top"/>
     </Grid>
 </UserControl>

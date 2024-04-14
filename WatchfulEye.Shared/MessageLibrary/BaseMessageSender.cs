@@ -6,6 +6,8 @@ using WatchfulEye.Shared.MessageLibrary.Messages;
 namespace WatchfulEye.Shared.MessageLibrary;
 
 public abstract class BaseMessageSender : IDisposable {
+    public event Action? OnHeartBeatPulse;
+
     protected readonly DealerSocket _socket;
     protected readonly ZeroMQMessageHandler _handler;
     protected readonly NetMQPoller _poller;
@@ -44,7 +46,9 @@ public abstract class BaseMessageSender : IDisposable {
     /// <summary>
     /// Handler method for when our heat beat "beats"
     /// </summary>
-    protected abstract void OnHeartBeat();
+    protected virtual void OnHeartBeat() {
+        OnHeartBeatPulse?.Invoke();
+    }
 
     /// <summary>
     /// Send message, blocking until message has been sent

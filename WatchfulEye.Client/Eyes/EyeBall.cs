@@ -47,6 +47,7 @@ public class EyeBall : BaseMessageSender {
     /// Method for when heart beat "beats"
     /// </summary>
     protected override void OnHeartBeat() {
+        base.OnHeartBeat();
         Logging.Debug("Received heartbeat from EyeSocket");
     }
 

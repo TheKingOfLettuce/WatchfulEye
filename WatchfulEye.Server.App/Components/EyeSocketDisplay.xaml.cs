@@ -11,7 +11,6 @@ using WatchfulEye.Server.Eyes;
 using WatchfulEye.Shared.MessageLibrary.Messages.VisionRequests;
 using MediaPlayer = LibVLCSharp.Shared.MediaPlayer;
 using WatchfulEye.Shared.Utility;
-using System.Net.Sockets;
 
 namespace WatchfulEye.Server.App.Components;
 
@@ -27,8 +26,7 @@ public partial class EyeSocketDisplay : UserControl
     private StreamMediaInput? _mediaInput;
     private Stream? _visionStream;
     
-    public EyeSocketDisplay()
-    {
+    public EyeSocketDisplay() {
         InitializeComponent();
         _loopCancel = new CancellationTokenSource();
         _mediaPlayer = new MediaPlayer(Vlc);
@@ -36,34 +34,49 @@ public partial class EyeSocketDisplay : UserControl
         Thumbnail.MouseLeftButtonDown += (sender, args) => ViewStream();
     }
 
-    public void AssignEyeSocket(EyeSocket eye)
-    {
+    /// <summary>
+    /// Assign a new EyeSocket to this display and listens for vision
+    /// </summary>
+    /// <param name="eye">the eye to add</param>
+    public void AssignEyeSocket(EyeSocket eye) {
         _eyeSocket = eye;
         _eyeSocket.OnVisionReady += HandleVisionReady;
+        _eyeSocket.OnHeartBeatPulse += HandleHeartbeat;
         CancellationToken token = _loopCancel.Token;
         Task.Run( () => PollThumbnail(token), token);
+        Dispatcher.Invoke(() => WriteStatus($"New eye connected {eye.EyeName}", Brushes.Green));
     }
 
-    public void RemoveEyeSocket()
-    {
+    /// <summary>
+    /// Removes an eye from this display, clearing any loops
+    /// </summary>
+    public void RemoveEyeSocket() {
         if (_eyeSocket == default) return;
 
         _eyeSocket.OnVisionReady -= HandleVisionReady;
+        _eyeSocket.OnHeartBeatPulse -= HandleHeartbeat;
         _loopCancel.Cancel();
         _eyeSocket = default;
         // TODO set to default image instead of hiding
         Thumbnail.Visibility = Visibility.Hidden;
         Video.Visibility = Visibility.Hidden;
+        Dispatcher.Invoke(() => WriteStatus("No Eye Connected", Brushes.Red));
     }
 
-    private async void PollThumbnail(CancellationToken token)
-    {
+    private void HandleHeartbeat() {
+        Dispatcher.Invoke(() => WriteStatus("Camera idle", Brushes.Green));
+    }
+
+    /// <summary>
+    /// Polls the eye continously for a thumbnail for partial activity
+    /// </summary>
+    /// <param name="token">the token to cancel this loop with</param>
+    private async void PollThumbnail(CancellationToken token) {
         // TODO see if we actually need to wait
         // sanity
         await Task.Delay(TimeSpan.FromSeconds(5), token);
         Dispatcher.Invoke(RequestThumbnail);
-        while (!token.IsCancellationRequested)
-        {
+        while (!token.IsCancellationRequested) {
             await Task.Delay(TimeSpan.FromSeconds(PollTime), token);
             if (token.IsCancellationRequested)
                 break;
@@ -71,10 +84,20 @@ public partial class EyeSocketDisplay : UserControl
         }
     }
 
-    private void RequestThumbnail() => _eyeSocket?.RequestPicture((int)Width, (int)Height);
-    private void ViewStream() => _eyeSocket?.RequestStream();
+    private void RequestThumbnail() {
+        WriteStatus("Polling for thumnail", Brushes.Green);
+        _eyeSocket?.RequestPicture((int)Width, (int)Height);
+    }
+    private void ViewStream() {
+        Dispatcher.Invoke(() => WriteStatus("Requesting for live stream", Brushes.Green));
+        _eyeSocket?.RequestStream();
+    }
     private void HandleVisionReady(VisionRequestType requestType) => Task.Run(() => HandleVisionReadyAsync(requestType));
 
+    /// <summary>
+    /// Handles receiving a vision ready message from our socket
+    /// </summary>
+    /// <param name="requestType">the vision type</param>
     private async void HandleVisionReadyAsync(VisionRequestType requestType)
     {
         if (_eyeSocket == null) return;
@@ -85,8 +108,7 @@ public partial class EyeSocketDisplay : UserControl
         }
 
         Logging.Info($"Handle vision ready for request {requestType} for eye {_eyeSocket.EyeName}");
-        switch (requestType)
-        {
+        switch (requestType) {
             case VisionRequestType.Stream:
                 HostStream();
                 break;
@@ -99,17 +121,24 @@ public partial class EyeSocketDisplay : UserControl
         }
     }
 
-    private void SetThumbnail(ImageSource image)
-    {
+    /// <summary>
+    /// Sets the thumbnail to the given image
+    /// </summary>
+    /// <param name="image">the image to set</param>
+    private void SetThumbnail(ImageSource image) {
         Logging.Info($"Setting thumbnail image for eye {_eyeSocket?.EyeName}");
+        WriteStatus("Thumbnail downloaded", Brushes.Green);
         Thumbnail.Source = image;
         // TODO find placeholder image for nothing so we dont have to set visible every time
         Thumbnail.Visibility = Visibility.Visible;
     }
     
-    private async void SaveThumbnail()
-    {
+    /// <summary>
+    /// Saves the vision stream into image data
+    /// </summary>
+    private async void SaveThumbnail() {
         Logging.Info($"Creating thumbnail data for eye {_eyeSocket?.EyeName}");
+        Dispatcher.InvokeAsync(() => WriteStatus("Downloading thumbnail", Brushes.Green));
         MemoryStream memoryStream = new MemoryStream();
         await _visionStream.CopyToAsync(memoryStream);
         _visionStream.Dispose();
@@ -117,31 +146,39 @@ public partial class EyeSocketDisplay : UserControl
         Video.Dispatcher.Invoke(() => SetThumbnail(GetImage(memoryStream)));
     }
 
-    private static BitmapImage GetImage(Stream memoryStream)
-    {
+    /// <summary>
+    /// Takes a stream and turns into a <see cref="BitmapImage"/>
+    /// </summary>
+    /// <param name="stream">the stream to save</param>
+    /// <returns>a <see cref="BitmapImage"/> from stream data</returns>
+    private static BitmapImage GetImage(Stream stream) {
         BitmapImage image = new BitmapImage();
         image.BeginInit();
         image.CacheOption = BitmapCacheOption.OnLoad;
-        image.StreamSource = memoryStream;
+        image.StreamSource = stream;
         image.EndInit();
         return image;
     }
 
     /// <summary>
-    /// Helper method to create a VLC stream
+    /// Passes our vision stream into a VLC stream
     /// </summary>
-    /// <param name="videoStream">the stream of video data</param>
-    private void HostStream()
-    {
+    private void HostStream() {
         _mediaInput = new StreamMediaInput(_visionStream);
         Logging.Debug("Creating media from video stream");
         Media stream = new Media(Vlc, _mediaInput);
         Logging.Debug("Playing stream into player");
         Video.Dispatcher.Invoke(ShowVideo);
+        Dispatcher?.Invoke(() => WriteStatus("Live stream received", Brushes.Green));
         _mediaPlayer.Stopped += PlayerStopped;
         _mediaPlayer.Play(stream);
     }
 
+    /// <summary>
+    /// Handles when our VLC player stops, or our vision stream ends
+    /// </summary>
+    /// <param name="sender">unused</param>
+    /// <param name="args">unsed</param>
     private void PlayerStopped(object? sender, EventArgs args) {
         _mediaPlayer.Stopped -= PlayerStopped;
         _mediaPlayer.Media?.Dispose();
@@ -150,8 +187,14 @@ public partial class EyeSocketDisplay : UserControl
         _mediaInput = null;
         Logging.Info($"Player stopped for Eye {_eyeSocket?.EyeName}");
         Video.Dispatcher.Invoke(HideVideo);
+        Dispatcher?.Invoke(() => WriteStatus("Camera live ended", Brushes.Green));
     }
     
     private void HideVideo() => Video.Visibility = Visibility.Hidden;
     private void ShowVideo() => Video.Visibility = Visibility.Visible;
+
+    private void WriteStatus(string message, SolidColorBrush color) {
+        StatusText.Content = message;
+        StatusText.Foreground = color;
+    }
 }
