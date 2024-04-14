@@ -4,7 +4,7 @@ using System.Net.Sockets;
 using WatchfulEye.Shared.MessageLibrary;
 using WatchfulEye.Shared.MessageLibrary.Messages;
 using WatchfulEye.Shared.MessageLibrary.Messages.VisionRequests;
-using WatchfulEye.Utility;
+using WatchfulEye.Shared.Utility;
 
 namespace WatchfulEye.Client.Eyes;
 

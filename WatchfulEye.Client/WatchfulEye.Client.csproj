@@ -2,7 +2,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\WatchfulEye.Shared\WatchfulEye.Shared.csproj" />
-    <ProjectReference Include="..\WatchfulEye.Utility\WatchfulEye.Utility.csproj" />
   </ItemGroup>
 
   <ItemGroup>

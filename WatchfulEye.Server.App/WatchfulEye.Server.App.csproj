@@ -9,7 +9,6 @@
 
     <ItemGroup>
       <ProjectReference Include="..\WatchfulEye.Server\WatchfulEye.Server.csproj" />
-      <ProjectReference Include="..\WatchfulEye.Utility\WatchfulEye.Utility.csproj" />
     </ItemGroup>
 
     <ItemGroup>

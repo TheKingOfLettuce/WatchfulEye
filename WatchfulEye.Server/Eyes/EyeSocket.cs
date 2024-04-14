@@ -1,13 +1,8 @@
 using System.Net;
 using System.Net.Sockets;
 using Serilog;
-using WatchfulEye.Utility;
-using NetMQ.Sockets;
-using WatchfulEye.Shared.MessageLibrary.MessageHandlers;
-using NetMQ;
-using WatchfulEye.Shared.MessageLibrary.Messages;
+using WatchfulEye.Shared.Utility;
 using WatchfulEye.Shared.MessageLibrary.Messages.VisionRequests;
-using WatchfulEye.Shared;
 using WatchfulEye.Shared.MessageLibrary;
 
 namespace WatchfulEye.Server.Eyes;

@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 using Serilog.Context;
 using Serilog.Core;
 
-namespace WatchfulEye.Utility;
+namespace WatchfulEye.Shared.Utility;
 
 public static class Logging {
     public const string LOG_TEMPLATE = "{Level,11:u} {Timestamp:HH:mm:ss:fff} ({File}/{Method}) {Message:j}{NewLine}{Exception}";

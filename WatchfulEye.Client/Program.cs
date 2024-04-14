@@ -1,5 +1,5 @@
 ﻿using WatchfulEye.Client.Eyes;
-using WatchfulEye.Utility;
+using WatchfulEye.Shared.Utility;
 
 namespace WatchfulEye.Client;
 

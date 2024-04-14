@@ -15,7 +15,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using WatchfulEye.Server.App.Components;
 using WatchfulEye.Server.Eyes;
-using WatchfulEye.Utility;
+using WatchfulEye.Shared.Utility;
 using Path = System.IO.Path;
 
 namespace WatchfulEye.Server.App

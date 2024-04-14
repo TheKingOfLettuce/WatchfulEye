@@ -10,7 +10,7 @@ using LibVLCSharp.Shared;
 using WatchfulEye.Server.Eyes;
 using WatchfulEye.Shared.MessageLibrary.Messages.VisionRequests;
 using MediaPlayer = LibVLCSharp.Shared.MediaPlayer;
-using WatchfulEye.Utility;
+using WatchfulEye.Shared.Utility;
 using System.Net.Sockets;
 
 namespace WatchfulEye.Server.App.Components;

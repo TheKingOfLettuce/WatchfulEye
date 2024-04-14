@@ -7,8 +7,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WatchfulEye.Server", "Watch
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WatchfulEye.Client", "WatchfulEye.Client\WatchfulEye.Client.csproj", "{93D13F02-3916-4217-B754-99C69D0330C9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WatchfulEye.Utility", "WatchfulEye.Utility\WatchfulEye.Utility.csproj", "{39CAB6D3-215A-4770-B7A0-248ED0A9A42B}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WatchfulEye.Shared", "WatchfulEye.Shared\WatchfulEye.Shared.csproj", "{3A85D656-15A3-4D87-9FC0-DD7B554A613E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WatchfulEye.Server.App", "WatchfulEye.Server.App\WatchfulEye.Server.App.csproj", "{73525E46-5AA3-42BB-9564-5C2886318095}"
@@ -30,10 +28,6 @@ Global
 		{93D13F02-3916-4217-B754-99C69D0330C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{93D13F02-3916-4217-B754-99C69D0330C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{93D13F02-3916-4217-B754-99C69D0330C9}.Release|Any CPU.Build.0 = Release|Any CPU
-		{39CAB6D3-215A-4770-B7A0-248ED0A9A42B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{39CAB6D3-215A-4770-B7A0-248ED0A9A42B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{39CAB6D3-215A-4770-B7A0-248ED0A9A42B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{39CAB6D3-215A-4770-B7A0-248ED0A9A42B}.Release|Any CPU.Build.0 = Release|Any CPU
 		{3A85D656-15A3-4D87-9FC0-DD7B554A613E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{3A85D656-15A3-4D87-9FC0-DD7B554A613E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3A85D656-15A3-4D87-9FC0-DD7B554A613E}.Release|Any CPU.ActiveCfg = Release|Any CPU

@@ -1,7 +1,7 @@
 using System.Net;
 using System.Net.Sockets;
 
-namespace WatchfulEye.Utility;
+namespace WatchfulEye.Shared.Utility;
 
 public static class IPUtils {
 

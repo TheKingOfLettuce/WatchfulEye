@@ -1,8 +1,7 @@
-using WatchfulEye.Shared.MessageLibrary;
 using WatchfulEye.Shared.MessageLibrary.MessageHandlers;
 using WatchfulEye.Shared.MessageLibrary.Messages;
 
-namespace WatchfulEye.Shared;
+namespace WatchfulEye.Shared.MessageLibrary;
 
 /// <summary>
 /// Checks the pulse of who we are talking to

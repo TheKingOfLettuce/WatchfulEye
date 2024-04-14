@@ -1,7 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\WatchfulEye.Utility\WatchfulEye.Utility.csproj" />
     <ProjectReference Include="..\WatchfulEye.Shared\WatchfulEye.Shared.csproj" />
   </ItemGroup>
 
