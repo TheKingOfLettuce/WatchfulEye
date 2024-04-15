@@ -11,12 +11,10 @@ namespace WatchfulEye.Server.Eyes;
 /// The "Socket" for the EyeBalls out in the world
 /// </summary>
 public class EyeSocket : BaseMessageSender {
-    public string EyeName => _eyeName;
     public event Action<VisionRequestType>? OnVisionReady;
 
     private readonly IPEndPoint _connectionPoint;
     private readonly Socket _mainSocket;
-    private string _eyeName;
 
     /// <summary>
     /// Starts our EyeSocket at the given connection point
@@ -24,9 +22,7 @@ public class EyeSocket : BaseMessageSender {
     /// <param name="ip">the ip address of the connection</param>
     /// <param name="port">the port of the connection</param>
     /// <param name="eyeName">the name of the eyeball</param>
-    public EyeSocket(string ip, int port, string eyeName, bool isBind = true) : base(ip, port, isBind) {
-        _eyeName = eyeName;
-
+    public EyeSocket(string ip, int port, string eyeName, bool isBind = true) : base(ip, port, eyeName, isBind) {
         _connectionPoint = new IPEndPoint(IPAddress.Parse("0.0.0.0"), port+1);
         _mainSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         _mainSocket.Bind(_connectionPoint);
@@ -70,7 +66,7 @@ public class EyeSocket : BaseMessageSender {
     /// </summary>
     protected override void OnHeartBeatFail() {
         Logging.Error($"Heartbeat Failure");
-        EyeManager.DeregisterEye(_eyeName);
+        EyeManager.DeregisterEye(Name);
     }
 
     /// <summary>
@@ -78,7 +74,7 @@ public class EyeSocket : BaseMessageSender {
     /// </summary>
     protected override void OnHeartBeat() {
         base.OnHeartBeat();
-        Logging.Debug($"Heartbeat from EyeBall {_eyeName}");
+        Logging.Debug($"Heartbeat from EyeBall {Name}");
     }
 
     /// <summary>
@@ -86,9 +82,9 @@ public class EyeSocket : BaseMessageSender {
     /// </summary>
     /// <returns>the stream of vision data</returns>
     public async Task<Stream?> GetNetworkStreamAsync() {
-        const int Time_Seconds = 10000;
-        Logging.Debug($"Looking to accept a connection within {Time_Seconds/1000} seconds");
-        CancellationTokenSource timeout = new CancellationTokenSource(Time_Seconds);
+        const float Time_Seconds = 10;
+        Logging.Debug($"Looking to accept a connection within {Time_Seconds} seconds");
+        using CancellationTokenSource timeout = new CancellationTokenSource(TimeSpan.FromSeconds(Time_Seconds));
         try {
             Socket handle = await _mainSocket.AcceptAsync(timeout.Token);
             Logging.Debug($"Accepted an Eye Connection, creating network stream");

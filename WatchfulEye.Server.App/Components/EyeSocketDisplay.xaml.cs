@@ -43,8 +43,8 @@ public partial class EyeSocketDisplay : UserControl
         _eyeSocket.OnVisionReady += HandleVisionReady;
         _eyeSocket.OnHeartBeatPulse += HandleHeartbeat;
         CancellationToken token = _loopCancel.Token;
-        Task.Run( () => PollThumbnail(token), token);
-        Dispatcher.Invoke(() => WriteStatus($"New eye connected {eye.EyeName}", Brushes.Green));
+        //Task.Run( () => PollThumbnail(token), token);
+        Dispatcher.Invoke(() => WriteStatus($"New eye connected {eye.Name}", Brushes.Green));
     }
 
     /// <summary>
@@ -58,8 +58,8 @@ public partial class EyeSocketDisplay : UserControl
         _loopCancel.Cancel();
         _eyeSocket = default;
         // TODO set to default image instead of hiding
-        Thumbnail.Visibility = Visibility.Hidden;
-        Video.Visibility = Visibility.Hidden;
+        Thumbnail.Dispatcher.Invoke(() => Thumbnail.Visibility = Visibility.Hidden);
+        Video.Dispatcher.Invoke(HideVideo);
         Dispatcher.Invoke(() => WriteStatus("No Eye Connected", Brushes.Red));
     }
 
@@ -72,15 +72,20 @@ public partial class EyeSocketDisplay : UserControl
     /// </summary>
     /// <param name="token">the token to cancel this loop with</param>
     private async void PollThumbnail(CancellationToken token) {
-        // TODO see if we actually need to wait
-        // sanity
-        await Task.Delay(TimeSpan.FromSeconds(5), token);
-        Dispatcher.Invoke(RequestThumbnail);
-        while (!token.IsCancellationRequested) {
-            await Task.Delay(TimeSpan.FromSeconds(PollTime), token);
-            if (token.IsCancellationRequested)
-                break;
+        try {
+            // give time for camera to warmup before polling
+            await Task.Delay(TimeSpan.FromSeconds(5), token);
             Dispatcher.Invoke(RequestThumbnail);
+            while (!token.IsCancellationRequested) {
+                await Task.Delay(TimeSpan.FromSeconds(PollTime), token);
+                if (token.IsCancellationRequested)
+                    break;
+                Dispatcher.Invoke(RequestThumbnail);
+            }
+        }
+        catch (OperationCanceledException e) {
+            Logging.Warning("Delay task was canceled in poll for thumbnail", e);
+            return;
         }
     }
 
@@ -107,7 +112,7 @@ public partial class EyeSocketDisplay : UserControl
             return;
         }
 
-        Logging.Info($"Handle vision ready for request {requestType} for eye {_eyeSocket.EyeName}");
+        Logging.Info($"Handle vision ready for request {requestType} for eye {_eyeSocket.Name}");
         switch (requestType) {
             case VisionRequestType.Stream:
                 HostStream();
@@ -126,7 +131,7 @@ public partial class EyeSocketDisplay : UserControl
     /// </summary>
     /// <param name="image">the image to set</param>
     private void SetThumbnail(ImageSource image) {
-        Logging.Info($"Setting thumbnail image for eye {_eyeSocket?.EyeName}");
+        Logging.Info($"Setting thumbnail image for eye {_eyeSocket?.Name}");
         WriteStatus("Thumbnail downloaded", Brushes.Green);
         Thumbnail.Source = image;
         // TODO find placeholder image for nothing so we dont have to set visible every time
@@ -137,7 +142,7 @@ public partial class EyeSocketDisplay : UserControl
     /// Saves the vision stream into image data
     /// </summary>
     private async void SaveThumbnail() {
-        Logging.Info($"Creating thumbnail data for eye {_eyeSocket?.EyeName}");
+        Logging.Info($"Creating thumbnail data for eye {_eyeSocket?.Name}");
         Dispatcher.InvokeAsync(() => WriteStatus("Downloading thumbnail", Brushes.Green));
         MemoryStream memoryStream = new MemoryStream();
         await _visionStream.CopyToAsync(memoryStream);
@@ -185,7 +190,7 @@ public partial class EyeSocketDisplay : UserControl
         _mediaInput?.Dispose();
         _visionStream?.Dispose();
         _mediaInput = null;
-        Logging.Info($"Player stopped for Eye {_eyeSocket?.EyeName}");
+        Logging.Info($"Player stopped for Eye {_eyeSocket?.Name}");
         Video.Dispatcher.Invoke(HideVideo);
         Dispatcher?.Invoke(() => WriteStatus("Camera live ended", Brushes.Green));
     }

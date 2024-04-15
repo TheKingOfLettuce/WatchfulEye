@@ -13,17 +13,16 @@ namespace WatchfulEye.Client.Eyes;
 /// </summary>
 public class EyeBall : BaseMessageSender {
     public readonly AutoResetEvent DisconnectedWaiter;
-    public readonly string EyeName;
     public readonly string SocketIP;
 
     private bool _isBusy;
     
-    public EyeBall(string ip, int port, string eyeName, bool isBind = true) : base(ip, port, isBind) {
-        EyeName = eyeName;
+    public EyeBall(string ip, int port, string eyeName, bool isBind = true) : base(ip, port, eyeName, isBind) {
         SocketIP = ip;
         DisconnectedWaiter = new AutoResetEvent(false);
         
-        Logging.Info($"New eye ball created {EyeName}");
+        Logging.Info($"New eye ball created {Name}");
+        Logging.Debug($"Bounded at {SocketIP} at {port} for communication and {port+1} for vision");
     }
 
     /// <summary>
@@ -132,7 +131,7 @@ public class EyeBall : BaseMessageSender {
     private async Task<bool> StartVisionProcess(ProcessStartInfo startInfo, VisionRequestMessage message) {
         Logging.Debug("Starting python process");
         using Process? pythonStream = Process.Start(startInfo);
-        if (pythonStream == null) {
+        if (pythonStream == null || pythonStream.HasExited) {
             Logging.Error("Failed to start python process");
             return false;
         }

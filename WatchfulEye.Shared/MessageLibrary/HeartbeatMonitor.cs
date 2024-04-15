@@ -1,3 +1,4 @@
+using WatchfulEye.Shared.Utility;
 using WatchfulEye.Shared.MessageLibrary.MessageHandlers;
 using WatchfulEye.Shared.MessageLibrary.Messages;
 
@@ -18,7 +19,6 @@ public class HeartbeatMonitor : IDisposable {
     private readonly BaseMessageSender _sender;
     private readonly ZeroMQMessageHandler _handler;
     private readonly AutoResetEvent _heartbeatAck;
-    
     private readonly CancellationTokenSource _loopToken;
 
     public HeartbeatMonitor(BaseMessageSender sender, ZeroMQMessageHandler handler, float timeout = 10, float nextAck = 60) {
@@ -63,20 +63,22 @@ public class HeartbeatMonitor : IDisposable {
     /// <param name="token">the cancel token to cancel gracefully</param>
     private async Task HeartbeatLoop(CancellationToken token) {
         if (!_sendAckOnLoopStart)
-            await Task.Delay(_nextAckTime);
+            await DelayHelper(_nextAckTime, token);
         while (!token.IsCancellationRequested) {
+            Logging.Debug($"{_sender.Name} Sending heartbeat message");
             if (!_sender.SendMessage(new HeartbeatMessage(), _timeoutTime)) {
-                // heartbeat failed to send
+                Logging.Debug("Failed to send heartbeat message");
                 break;
             }
-            _heartbeatAck.Reset();
+            Logging.Debug($"{_sender.Name} Heartbeat sent, waiting for ack");
             if (_heartbeatAck.WaitOne(_timeoutTime)) {
-                // received ack from heartbeat
+                Logging.Debug($"{_sender.Name} Received heartbeat ack");
                 OnHeartBeat?.Invoke();
-                await Task.Delay(_nextAckTime, token);
+                _heartbeatAck.Reset();
+                await DelayHelper(_nextAckTime, token);
             }
             else {
-                // did not receive ack
+                Logging.Debug($"{_sender.Name} Did not receive heartbeat ack message");
                 break;
             }
         }
@@ -89,10 +91,27 @@ public class HeartbeatMonitor : IDisposable {
     }
 
     /// <summary>
+    /// Delay helper, to help with handling <see cref="OperationCanceledException"/>
+    /// </summary>
+    /// <param name="time">the time to delay for</param>
+    /// <param name="token">the forwarded <see cref="CancellationToken"/></param>
+    private static async Task DelayHelper(TimeSpan time, CancellationToken token) {
+        try {
+            await Task.Delay(time, token);
+        }
+        catch (OperationCanceledException) {
+            return;
+        }
+
+        return;
+    }
+
+    /// <summary>
     /// Handles sending the <see cref="HeartbeatMessage"/>
     /// </summary>
     /// <param name="message">the <see cref="HeartbeatMessage"/> to send</param>
     private void HandleHeartbeat(HeartbeatMessage message) {
+        Logging.Debug($"{_sender.Name} Received a heartbeat message from otherside, sending ack");
         _sender.SendMessage(new HeartbeatAckMessage());
     }
 

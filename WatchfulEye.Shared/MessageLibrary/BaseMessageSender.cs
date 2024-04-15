@@ -8,12 +8,15 @@ namespace WatchfulEye.Shared.MessageLibrary;
 public abstract class BaseMessageSender : IDisposable {
     public event Action? OnHeartBeatPulse;
 
+    public readonly string Name;
+
     protected readonly DealerSocket _socket;
     protected readonly ZeroMQMessageHandler _handler;
     protected readonly NetMQPoller _poller;
     protected readonly HeartbeatMonitor _heartBeat;
     
-    protected BaseMessageSender(string ip, int port, bool isBind = true) {
+    protected BaseMessageSender(string ip, int port, string name, bool isBind = true) {
+        Name = name;
         _socket = new DealerSocket($"{(isBind ? '@' : '>')}tcp://{ip}:{port}");
         _handler = new ZeroMQMessageHandler();
         _poller = new NetMQPoller();
