@@ -22,6 +22,17 @@
             "cwd": "${workspaceFolder}/WatchfulEye.Client",
             "console": "externalTerminal",
             "stopAtEntry": false
+        },
+        {
+            "name": "Run 2nd Client",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "BuildClient",
+            "program": "${workspaceFolder}/WatchfulEye.Client/bin/Debug/net7.0/WatchfulEye.Client.exe",
+            "args": ["TestEye2"],
+            "cwd": "${workspaceFolder}/WatchfulEye.Client",
+            "console": "externalTerminal",
+            "stopAtEntry": false
         }
     ]
 }
