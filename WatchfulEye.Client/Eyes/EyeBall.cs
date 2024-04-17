@@ -42,14 +42,6 @@ public class EyeBall : BaseMessageSender {
         DisconnectedWaiter.Set();
     }
 
-    /// <summary>
-    /// Method for when heart beat "beats"
-    /// </summary>
-    protected override void OnHeartBeat() {
-        base.OnHeartBeat();
-        Logging.Debug("Received heartbeat from EyeSocket");
-    }
-
     #region Picture
 
     private void HandlePictureRequest(RequestPictureMessage message) {
