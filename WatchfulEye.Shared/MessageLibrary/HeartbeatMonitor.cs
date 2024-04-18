@@ -65,20 +65,13 @@ public class HeartbeatMonitor : IDisposable {
         if (!_sendAckOnLoopStart)
             await DelayHelper(_nextAckTime, token);
         while (!token.IsCancellationRequested) {
-            Logging.Debug($"{_sender.Name} Sending heartbeat message");
-            if (!_sender.SendMessage(new HeartbeatMessage(), _timeoutTime)) {
-                Logging.Debug("Failed to send heartbeat message");
-                break;
-            }
-            Logging.Debug($"{_sender.Name} Heartbeat sent, waiting for ack");
+            _sender.SendMessage(new HeartbeatMessage());
             if (_heartbeatAck.WaitOne(_timeoutTime)) {
-                Logging.Debug($"{_sender.Name} Received heartbeat ack");
                 OnHeartBeat?.Invoke();
                 _heartbeatAck.Reset();
                 await DelayHelper(_nextAckTime, token);
             }
             else {
-                Logging.Debug($"{_sender.Name} Did not receive heartbeat ack message");
                 break;
             }
         }
@@ -111,7 +104,6 @@ public class HeartbeatMonitor : IDisposable {
     /// </summary>
     /// <param name="message">the <see cref="HeartbeatMessage"/> to send</param>
     private void HandleHeartbeat(HeartbeatMessage message) {
-        Logging.Debug($"{_sender.Name} Received a heartbeat message from otherside, sending ack");
         _sender.SendMessage(new HeartbeatAckMessage());
     }
 

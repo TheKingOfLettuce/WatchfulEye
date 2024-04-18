@@ -43,7 +43,7 @@ public partial class EyeSocketDisplay : UserControl
         _eyeSocket.OnVisionReady += HandleVisionReady;
         _eyeSocket.OnHeartBeatPulse += HandleHeartbeat;
         CancellationToken token = _loopCancel.Token;
-        //Task.Run( () => PollThumbnail(token), token);
+        Task.Run( () => PollThumbnail(token), token);
         Dispatcher.Invoke(() => WriteStatus($"New eye connected {eye.Name}", Brushes.Green));
     }
 

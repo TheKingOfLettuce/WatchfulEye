@@ -1,7 +1,9 @@
+using System.Collections.Concurrent;
 using NetMQ;
 using NetMQ.Sockets;
 using WatchfulEye.Shared.MessageLibrary.MessageHandlers;
 using WatchfulEye.Shared.MessageLibrary.Messages;
+using WatchfulEye.Shared.Utility;
 
 namespace WatchfulEye.Shared.MessageLibrary;
 
@@ -14,17 +16,21 @@ public abstract class BaseMessageSender : IDisposable {
     protected readonly ZeroMQMessageHandler _handler;
     protected readonly NetMQPoller _poller;
     protected readonly HeartbeatMonitor _heartBeat;
+    protected readonly NetMQQueue<BaseMessage> _messageQueue;
     
     protected BaseMessageSender(string ip, int port, string name, bool isBind = true) {
         Name = name;
+        _messageQueue = new NetMQQueue<BaseMessage>();
         _socket = new DealerSocket($"{(isBind ? '@' : '>')}tcp://{ip}:{port}");
         _handler = new ZeroMQMessageHandler();
-        _poller = new NetMQPoller();
+        _poller = new NetMQPoller{_messageQueue};
         _heartBeat = new HeartbeatMonitor(this, _handler, 10, 10);
 
         _poller.Add(_socket);
-        _poller.RunAsync();
+        _socket.ReceiveReady += _handler.HandleMessageReceived;
+        _messageQueue.ReceiveReady += HandleSendMessage;
         SubscribeMessages();
+        _poller.RunAsync();
         _heartBeat.StartMonitor();
     }
 
@@ -36,7 +42,6 @@ public abstract class BaseMessageSender : IDisposable {
     /// Subscribe to all messages upon construction
     /// </summary>
     protected virtual void SubscribeMessages() {
-        _socket.ReceiveReady += _handler.HandleMessageReceived;
         _heartBeat.OnHeartBeatFail += OnHeartBeatFail;
         _heartBeat.OnHeartBeat += OnHeartBeat;
     }
@@ -50,37 +55,30 @@ public abstract class BaseMessageSender : IDisposable {
     /// Handler method for when our heat beat "beats"
     /// </summary>
     protected virtual void OnHeartBeat() {
+        Logging.Debug($"{Name} pulse checked, still alive");
         OnHeartBeatPulse?.Invoke();
+    }
+
+    public void SendMessage(BaseMessage message) {
+        _messageQueue.Enqueue(message);
     }
 
     /// <summary>
     /// Send message, blocking until message has been sent
     /// </summary>
     /// <param name="message">the message to send</param>
-    public virtual void SendMessage(BaseMessage message) {
-        byte[] messageData = message.ToData();
-        _socket.SendFrame(messageData, messageData.Length);
-    }
+    protected virtual void HandleSendMessage(object? sender, NetMQQueueEventArgs<BaseMessage> args) { 
+        if (!_messageQueue.TryDequeue(out BaseMessage message, TimeSpan.FromSeconds(5))) {
+            Logging.Warning("Could not dequeue message from queue");
+            return;
+        }
 
-    /// <summary>
-    /// Send message, attempts to send until timeout has passed
-    /// </summary>
-    /// <param name="message">the message to send</param>
-    /// <param name="timeOut">how long to attempt to send message, in seconds</param>
-    /// <returns>if it sent the message or not within the time</returns>
-    public virtual bool SendMessage(BaseMessage message, float timeOut) {
-        return SendMessage(message, TimeSpan.FromSeconds(timeOut));
-    }
-
-    /// <summary>
-    /// Send message, attempts to send until timeout has passed
-    /// </summary>
-    /// <param name="message">the message to send</param>
-    /// <param name="timeOut">how long to attempt to send message</param>
-    /// <returns>if it sent the message or not within the time</returns>
-    public virtual bool SendMessage(BaseMessage message, TimeSpan timeOut) {
+        Logging.Debug($"Attempting to send message of type {message.GetType().Name}");
         byte[] messageData = message.ToData();
-        return _socket.TrySendFrame(timeOut, messageData, messageData.Length);
+        if (_socket.TrySendFrame(TimeSpan.FromSeconds(7), messageData, messageData.Length))
+            Logging.Debug("Message sent sucesfully");
+        else
+            Logging.Warning("Failed to send message");
     }
 
     public virtual void Dispose() {
