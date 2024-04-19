@@ -73,8 +73,6 @@ public partial class EyeSocketDisplay : UserControl
     /// <param name="token">the token to cancel this loop with</param>
     private async void PollThumbnail(CancellationToken token) {
         try {
-            // give time for camera to warmup before polling
-            await Task.Delay(TimeSpan.FromSeconds(5), token);
             Dispatcher.Invoke(RequestThumbnail);
             while (!token.IsCancellationRequested) {
                 await Task.Delay(TimeSpan.FromSeconds(PollTime), token);
@@ -90,7 +88,7 @@ public partial class EyeSocketDisplay : UserControl
     }
 
     private void RequestThumbnail() {
-        WriteStatus("Polling for thumnail", Brushes.Green);
+        WriteStatus("Polling for thumbnail", Brushes.Green);
         _eyeSocket?.RequestPicture((int)Width, (int)Height);
     }
     private void ViewStream() {
@@ -109,6 +107,7 @@ public partial class EyeSocketDisplay : UserControl
         _visionStream = await _eyeSocket.GetNetworkStreamAsync();
         if (_visionStream == null) {
             Logging.Error($"Failed to get network stream from vision for request {requestType}");
+            Dispatcher.Invoke(() => WriteStatus("Data Stream Request Failed", Brushes.Red));
             return;
         }
 
