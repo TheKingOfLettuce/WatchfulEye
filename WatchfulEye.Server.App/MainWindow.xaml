@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:WatchfulEye.Server.App"
         xmlns:components="clr-namespace:WatchfulEye.Server.App.Components"
         mc:Ignorable="d"
-        Title="MainWindow" Height="900" Width="1600"
+        Title="MainWindow" Height="950" Width="1650"
         Background="DarkSlateBlue">
     <Grid>
         <Grid.ColumnDefinitions>
@@ -18,9 +18,9 @@
             <RowDefinition />
         </Grid.RowDefinitions>
         
-        <components:EyeSocketDisplay Width="800" Height="450" x:Name="Socket1"/>
-        <components:EyeSocketDisplay Grid.Row="1" Grid.Column="0" Width="800" Height="450" x:Name="Socket2"/>
-        <components:EyeSocketDisplay Grid.Row="0" Grid.Column="1" Width="800" Height="450" x:Name="Socket3"/>
-        <components:EyeSocketDisplay Grid.Row="1" Grid.Column="1" Width="800" Height="450" x:Name="Socket4"/>
+        <components:EyeSocketDisplay Width="800" Height="450" x:Name="Socket1" Margin="10"/>
+        <components:EyeSocketDisplay Grid.Row="1" Grid.Column="0" Width="800" Height="450" x:Name="Socket2" Margin="10"/>
+        <components:EyeSocketDisplay Grid.Row="0" Grid.Column="1" Width="800" Height="450" x:Name="Socket3" Margin="10"/>
+        <components:EyeSocketDisplay Grid.Row="1" Grid.Column="1" Width="800" Height="450" x:Name="Socket4" Margin="10"/>
     </Grid>
 </Window>

@@ -3,13 +3,20 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:local="clr-namespace:WatchfulEye.Server.App.Components"
              xmlns:uc="clr-namespace:LibVLCSharp.WPF;assembly=LibVLCSharp.WPF"
+             xmlns:app="clr-namespace:WatchfulEye.Server.App"
+             xmlns:local="clr-namespace:WatchfulEye.Server.App.Components"
              mc:Ignorable="d"
              d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.DataContext>
+        <app:EyeSocketModelController/>
+    </UserControl.DataContext>
     <Grid>
-        <Image Height="450" Width="800" Name="Thumbnail" Visibility="Hidden"/>
-        <uc:VideoView Height="450" Width="800" Name="Video" Visibility="Hidden"/>
-        <Label Content="No Eye Connected" Name="StatusText" Width="Auto" FontSize="36" HorizontalAlignment="Center" Foreground="Red" VerticalAlignment="Top"/>
+        <Image Height="450" Width="800" Name="Thumbnail" Visibility="{Binding ThumbnailVisibility, Converter={StaticResource BoolToVisibilityConverter}}" Source="{Binding ThumbnailSource}"/>
+        <uc:VideoView Height="450" Width="800" Name="Video" Visibility="{Binding VideoVisibility, Converter={StaticResource BoolToVisibilityConverter}}" MediaPlayer="{Binding VideoSource}"/>
+        <Button Width="50" Height="50" HorizontalAlignment="Left" VerticalAlignment="Bottom" Command="{Binding StreamRequestCommand}" Visibility="{Binding StatusVisibility, Converter={StaticResource BoolToVisibilityConverter}}" Margin="15"/>
+        <Ellipse Width="25" Height="25" Name="StatusColor" HorizontalAlignment="Right" VerticalAlignment="Bottom" Fill="{Binding StatusColor}" Visibility="{Binding StatusVisibility, Converter={StaticResource BoolToVisibilityConverter}}" Margin="0,0,15,15"/>
+        <Label Content="{Binding CurrentStatus}" Name="StatusText" Width="Auto" FontSize="24" Foreground="White" Visibility="{Binding StatusVisibility, Converter={StaticResource BoolToVisibilityConverter}}" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,50,10"/>
+        <Label Content="No Eye Connected" Name="EyeDisconnectedText" Width="Auto" FontSize="72" Visibility="{Binding NoConnectionVisibility, Converter={StaticResource BoolToVisibilityConverter}}" HorizontalAlignment="Center" Foreground="Red" VerticalAlignment="Center"/>
     </Grid>
 </UserControl>

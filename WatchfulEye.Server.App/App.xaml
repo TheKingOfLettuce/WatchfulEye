@@ -4,6 +4,6 @@
              xmlns:local="clr-namespace:WatchfulEye.Server.App"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-         
+        <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"></BooleanToVisibilityConverter>
     </Application.Resources>
 </Application>

@@ -41,9 +41,6 @@ namespace WatchfulEye.Server.App
             _free.Enqueue(Socket4);
             
             Logging.Info("Starting EyeManager");
-            
-            if (!Directory.Exists(Path.Combine(Directory.GetCurrentDirectory(), "Thumbnails")))
-                Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), "Thumbnails"));
             EyeManager.OnEyeSocketAdded += HandleSocketAdd;
             EyeManager.OnEyeSocketRemoved += HandleSocketRemoved;
             EyeManager.StartNetworkDiscovery();
@@ -64,7 +61,7 @@ namespace WatchfulEye.Server.App
             }
 
             EyeSocketDisplay page = _free.Dequeue();
-            page.AssignEyeSocket(eye);
+            page.AssignEye(eye);
             _pages.Add(eye, page);
             Logging.Info("Added eye socket to page");
         }
@@ -78,7 +75,7 @@ namespace WatchfulEye.Server.App
             }
 
             EyeSocketDisplay page = _pages[remove];
-            page.RemoveEyeSocket();
+            page.UnassignEye();
             _free.Enqueue(page);
             _pages.Remove(remove);
         }
