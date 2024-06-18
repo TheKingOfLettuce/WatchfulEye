@@ -39,7 +39,7 @@ The server supports the following features:
 ## WatchfulEye.Server.App
 
 ### Description
-This project contains a GUI app to run the `WatchfulEye.Server` project. It has a simple interface to handle the current display and live view of multiple cameras. All using a MVC design, taking advantage of DataBindings for easy view manipulation.
+This project contains a GUI app to run the `WatchfulEye.Server` project. It has a simple interface to handle the current display and live view of multiple cameras. All using a MVVM design, taking advantage of DataBindings for easy view manipulation.
 
 ### Features
 The GUI fully interfaces with the `WatchfulEye.Server` project to support the following features:

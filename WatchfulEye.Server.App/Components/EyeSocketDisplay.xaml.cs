@@ -4,11 +4,11 @@ using WatchfulEye.Server.Eyes;
 namespace WatchfulEye.Server.App.Components;
 
 public partial class EyeSocketDisplay : UserControl {
-    private readonly EyeSocketModelController _modelController;
+    private readonly EyeSocketViewModel _modelController;
     
     public EyeSocketDisplay() {
         InitializeComponent();
-        _modelController = (EyeSocketModelController)DataContext;
+        _modelController = (EyeSocketViewModel)DataContext;
     }
 
     public void AssignEye(EyeSocket eye) => _modelController.ActivateEye(eye);

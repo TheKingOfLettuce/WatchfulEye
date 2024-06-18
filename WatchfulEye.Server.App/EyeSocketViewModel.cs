@@ -13,7 +13,7 @@ using MediaPlayer = LibVLCSharp.Shared.MediaPlayer;
 
 namespace WatchfulEye.Server.App;
 
-public class EyeSocketModelController : PropertyChangedBase {
+public class EyeSocketViewModel : PropertyChangedBase {
     private const float PollTime = 60;
     private static readonly LibVLC Vlc = new LibVLC();
 
@@ -108,10 +108,10 @@ public class EyeSocketModelController : PropertyChangedBase {
 
     #region Commands
     class StreamRequestCommands : ICommand {
-        private readonly EyeSocketModelController _controller;
+        private readonly EyeSocketViewModel _controller;
         public event EventHandler? CanExecuteChanged;
 
-        public StreamRequestCommands(EyeSocketModelController instance) {
+        public StreamRequestCommands(EyeSocketViewModel instance) {
             _controller = instance;
         }
 
@@ -128,7 +128,7 @@ public class EyeSocketModelController : PropertyChangedBase {
     private MediaPlayer _mediaPlayer;
     private StreamMediaInput? _mediaInput;
 
-    public EyeSocketModelController() {
+    public EyeSocketViewModel() {
         StreamRequestCommand = new StreamRequestCommands(this);
         _thumbnailToken = new CancellationTokenSource();
         VideoSource = new MediaPlayer(Vlc);
