@@ -1,5 +1,6 @@
 using NetMQ;
 using WatchfulEye.Shared.MessageLibrary.Messages;
+using WatchfulEye.Shared.MessageLibrary.Messages.General;
 using WatchfulEye.Shared.MessageLibrary.Messages.VisionRequests;
 
 namespace WatchfulEye.Shared.MessageLibrary.MessageHandlers;

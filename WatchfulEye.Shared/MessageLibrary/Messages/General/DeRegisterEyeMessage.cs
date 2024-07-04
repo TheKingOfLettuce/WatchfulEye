@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace WatchfulEye.Shared.MessageLibrary.Messages;
+namespace WatchfulEye.Shared.MessageLibrary.Messages.General;
 
 public class DeRegisterEyeMessage : BaseMessage {
     public override MessageCodes MessageCode => MessageCodes.DEREGISTER_EYE;

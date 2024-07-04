@@ -1,4 +1,3 @@
-using System.Collections.Concurrent;
 using NetMQ;
 using NetMQ.Sockets;
 using WatchfulEye.Shared.MessageLibrary.MessageHandlers;

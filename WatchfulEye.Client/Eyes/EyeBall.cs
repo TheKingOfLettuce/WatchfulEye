@@ -2,7 +2,7 @@ using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using WatchfulEye.Shared.MessageLibrary;
-using WatchfulEye.Shared.MessageLibrary.Messages;
+using WatchfulEye.Shared.MessageLibrary.Messages.General;
 using WatchfulEye.Shared.MessageLibrary.Messages.VisionRequests;
 using WatchfulEye.Shared.Utility;
 

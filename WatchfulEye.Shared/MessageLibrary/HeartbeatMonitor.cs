@@ -1,6 +1,5 @@
-using WatchfulEye.Shared.Utility;
 using WatchfulEye.Shared.MessageLibrary.MessageHandlers;
-using WatchfulEye.Shared.MessageLibrary.Messages;
+using WatchfulEye.Shared.MessageLibrary.Messages.General;
 
 namespace WatchfulEye.Shared.MessageLibrary;
 
