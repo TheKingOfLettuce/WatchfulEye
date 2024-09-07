@@ -32,6 +32,16 @@
             "problemMatcher": "$msCompile"
         },
         {
+            "label": "BuildTestClient",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/WatchfulEye.Client.Test/WatchfulEye.Client.Test.csproj"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
             "label": "BuildServerApp",
             "command": "dotnet",
             "type": "process",

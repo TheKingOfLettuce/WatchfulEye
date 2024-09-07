@@ -24,6 +24,28 @@
             "stopAtEntry": false
         },
         {
+            "name": "Run Test Client",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "BuildTestClient",
+            "program": "${workspaceFolder}/WatchfulEye.Client.Test/bin/Debug/net7.0/WatchfulEye.Client.Test.exe",
+            "args": ["TestEye"],
+            "cwd": "${workspaceFolder}/WatchfulEye.Client.Test",
+            "console": "externalTerminal",
+            "stopAtEntry": false
+        },
+        {
+            "name": "Run 2nd Test Client",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "BuildTestClient",
+            "program": "${workspaceFolder}/WatchfulEye.Client.Test/bin/Debug/net7.0/WatchfulEye.Client.Test.exe",
+            "args": ["TestEye2"],
+            "cwd": "${workspaceFolder}/WatchfulEye.Client.Test",
+            "console": "externalTerminal",
+            "stopAtEntry": false
+        },
+        {
             "name": "Run 2nd Client",
             "type": "coreclr",
             "request": "launch",
