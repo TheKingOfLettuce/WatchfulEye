@@ -1,9 +1,10 @@
 using System.Text.Json.Serialization;
+using LettuceTalk.Core;
 
 namespace WatchfulEye.Shared.MessageLibrary.Messages.VisionRequests;
 
+[MessageData(MessageCodes.REQUEST_STREAM)]
 public class RequestStreamMessage : VisionRequestMessage {
-    public override MessageCodes MessageCode => MessageCodes.REQUEST_STREAM;
     public override VisionRequestType VisionRequestType => VisionRequestType.Stream;
 
     [JsonInclude]

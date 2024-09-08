@@ -1,4 +1,4 @@
-using WatchfulEye.Shared.MessageLibrary.MessageHandlers;
+using LettuceTalk.Core.MessageHandlers;
 using WatchfulEye.Shared.MessageLibrary.Messages.General;
 
 namespace WatchfulEye.Shared.MessageLibrary;
@@ -15,14 +15,12 @@ public class HeartbeatMonitor : IDisposable {
     private TimeSpan _nextAckTime;
     private bool _isActive;
 
-    private readonly BaseMessageSender _sender;
-    private readonly ZeroMQMessageHandler _handler;
+    private readonly TalkingPoint _comms;
     private readonly AutoResetEvent _heartbeatAck;
     private readonly CancellationTokenSource _loopToken;
 
-    public HeartbeatMonitor(BaseMessageSender sender, ZeroMQMessageHandler handler, float timeout = 10, float nextAck = 60) {
-        _sender = sender;
-        _handler = handler;
+    public HeartbeatMonitor(TalkingPoint comms, float timeout = 10, float nextAck = 60) {
+        _comms = comms;
         _heartbeatAck = new AutoResetEvent(false);
         _loopToken = new CancellationTokenSource();
 
@@ -37,8 +35,8 @@ public class HeartbeatMonitor : IDisposable {
         if (_isActive) return;
 
         _isActive = true;
-        _handler.Subscribe<HeartbeatMessage>(HandleHeartbeat);
-        _handler.Subscribe<HeartbeatAckMessage>(HandleHeartbeatAck);
+        _comms.Subscribe<HeartbeatMessage>(HandleHeartbeat);
+        _comms.Subscribe<HeartbeatAckMessage>(HandleHeartbeatAck);
 
         CancellationToken cancel = _loopToken.Token;
         Task.Run(() => HeartbeatLoop(cancel), _loopToken.Token);
@@ -51,8 +49,8 @@ public class HeartbeatMonitor : IDisposable {
         if (!_isActive) return;
 
         _isActive = false;
-        _handler.Unsubscribe<HeartbeatMessage>(HandleHeartbeat);
-        _handler.Unsubscribe<HeartbeatAckMessage>(HandleHeartbeatAck);
+        _comms.Unsubscribe<HeartbeatMessage>(HandleHeartbeat);
+        _comms.Unsubscribe<HeartbeatAckMessage>(HandleHeartbeatAck);
         _loopToken.Cancel();
     }
 
@@ -64,7 +62,7 @@ public class HeartbeatMonitor : IDisposable {
         if (!_sendAckOnLoopStart)
             await DelayHelper(_nextAckTime, token);
         while (!token.IsCancellationRequested) {
-            _sender.SendMessage(new HeartbeatMessage());
+            _comms.SendMessage(new SendMessageArgs(new HeartbeatMessage()));
             if (_heartbeatAck.WaitOne(_timeoutTime)) {
                 OnHeartBeat?.Invoke();
                 _heartbeatAck.Reset();
@@ -103,7 +101,7 @@ public class HeartbeatMonitor : IDisposable {
     /// </summary>
     /// <param name="message">the <see cref="HeartbeatMessage"/> to send</param>
     private void HandleHeartbeat(HeartbeatMessage message) {
-        _sender.SendMessage(new HeartbeatAckMessage());
+        _comms.SendMessage(new SendMessageArgs(new HeartbeatAckMessage()));
     }
 
     /// <summary>

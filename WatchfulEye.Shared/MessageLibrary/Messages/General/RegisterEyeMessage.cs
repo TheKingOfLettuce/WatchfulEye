@@ -1,10 +1,10 @@
 using System.Text.Json.Serialization;
+using LettuceTalk.Core;
 
 namespace WatchfulEye.Shared.MessageLibrary.Messages.General;
 
-public class RegisterEyeMessage : BaseMessage {
-    public override MessageCodes MessageCode => MessageCodes.REGISTER_EYE;
-
+[MessageData(MessageCodes.REGISTER_EYE)]
+public class RegisterEyeMessage : Message {
     [JsonInclude]
     public readonly string EyeName;
 

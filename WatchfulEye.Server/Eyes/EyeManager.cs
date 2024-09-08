@@ -1,6 +1,6 @@
 using System.Net.Sockets;
 using WatchfulEye.Shared.MessageLibrary;
-using WatchfulEye.Shared.MessageLibrary.Messages;
+using LettuceTalk.Core;
 using WatchfulEye.Shared.MessageLibrary.Messages.General;
 using WatchfulEye.Shared.Utility;
 
@@ -57,7 +57,7 @@ public static class EyeManager {
     /// Post a message to all registered <see cref="EyeSocket"/>
     /// </summary>
     /// <param name="message">the message to post</param>
-    public static void PostToAllSockets(BaseMessage message) {
+    public static void PostToAllSockets(Message message) {
         foreach(EyeSocket socket in _eyeSockets.Values) {
             socket.SendMessage(message);
         }
@@ -84,15 +84,9 @@ public static class EyeManager {
             }
 
             Logging.Debug("Receieved data during NetoworkDisocery");
-            // decode register message
-            (MessageCodes, string) msgData = MessageFactory.GetMessageData(clientResults.Buffer);
-            if (msgData.Item1 != MessageCodes.REGISTER_EYE) {
-                Logging.Error($"Network discovery received a message that wasn't a register message");
-                continue;
-            }
 
             // handle register message
-            RegisterEyeMessage? register = MessageFactory.DeserializeMsg<RegisterEyeMessage>(msgData.Item2);
+            RegisterEyeMessage register = (RegisterEyeMessage)MessageFactory.GetMessage(clientResults.Buffer);
             if (register == default) {
                 Logging.Error("Failed to parse JSON register message");
                 continue;
@@ -105,7 +99,7 @@ public static class EyeManager {
             Logging.Debug("Eye socket created, sending register ack back");
 
             // send ack message back
-            byte[] msgAckData = new RegisterEyeAckMessage(_eyeSocketPort, localIP).ToData();
+            byte[] msgAckData = MessageFactory.GetMessageData(new RegisterEyeAckMessage(_eyeSocketPort, localIP));
             await server.SendAsync(msgAckData, msgAckData.Length, clientResults.RemoteEndPoint);
             _eyeSocketPort += 2;
             Logging.Debug("Registration Acknowledgment sent");

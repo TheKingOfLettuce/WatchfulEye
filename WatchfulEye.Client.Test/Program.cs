@@ -1,10 +1,15 @@
-﻿using WatchfulEye.Client.Eyes;
+﻿using System.Reflection;
+using LettuceTalk.Core;
+using WatchfulEye.Client.Eyes;
+using WatchfulEye.Shared.MessageLibrary;
 using WatchfulEye.Shared.Utility;
 
 namespace WatchfulEye.Client;
 
 internal static class Program {
     public static void Main(string[] args) {
+        //MessageFactory.AssignMessageBuilder(new DebugJsonMessageBuilder());
+        MessageFactory.AssociateAssembly(Assembly.GetAssembly(typeof(MessageCodes)));
         Logging.Debug("Creating eyeball");
         using EyeBall? eye = EyeBall.SocketEye(args[0]);
         if (eye == null) {

@@ -1,10 +1,10 @@
 using System.Text.Json.Serialization;
+using LettuceTalk.Core;
 
 namespace WatchfulEye.Shared.MessageLibrary.Messages.General;
 
-public class RegisterEyeAckMessage : BaseMessage {
-    public override MessageCodes MessageCode => MessageCodes.REGISTER_EYE_ACK;
-
+[MessageData(MessageCodes.REGISTER_EYE_ACK)]
+public class RegisterEyeAckMessage : Message {
     [JsonInclude]
     public readonly int Port;
     [JsonInclude]

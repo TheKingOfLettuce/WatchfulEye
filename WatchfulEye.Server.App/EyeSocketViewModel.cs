@@ -143,14 +143,14 @@ public class EyeSocketViewModel : PropertyChangedBase {
         NoConnectionVisibility = false;
         StatusVisibility = true;
         _eye.OnVisionReady += HandleVisionReady;
-        _eye.OnHeartBeatPulse += HandleHeartbeat;
+        //_eye.OnHeartBeatPulse += HandleHeartbeat;
         CancellationToken token = _thumbnailToken.Token;
         Task.Run( () => PollThumbnail(token), token);
     }
 
     public void DeactivateEye() {
         _eye.OnVisionReady -= HandleVisionReady;
-        _eye.OnHeartBeatPulse -= HandleHeartbeat;
+        //_eye.OnHeartBeatPulse -= HandleHeartbeat;
         StatusVisibility = false;
         VideoVisibility = false;
         ThumbnailVisibility = false;

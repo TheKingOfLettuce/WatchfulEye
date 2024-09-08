@@ -1,4 +1,6 @@
-﻿namespace WatchfulEye.Shared.MessageLibrary.Messages.VisionRequests;
+﻿using LettuceTalk.Core;
+
+namespace WatchfulEye.Shared.MessageLibrary.Messages.VisionRequests;
 
 public enum VisionRequestType {
     None,
@@ -6,6 +8,7 @@ public enum VisionRequestType {
     Picture
 }
 
-public abstract class VisionRequestMessage : BaseMessage {
+
+public abstract class VisionRequestMessage : Message {
     public abstract VisionRequestType VisionRequestType {get;}
 }

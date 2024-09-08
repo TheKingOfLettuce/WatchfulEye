@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -13,8 +14,10 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using LettuceTalk.Core;
 using WatchfulEye.Server.App.Components;
 using WatchfulEye.Server.Eyes;
+using WatchfulEye.Shared.MessageLibrary;
 using WatchfulEye.Shared.Utility;
 using Path = System.IO.Path;
 
@@ -32,6 +35,8 @@ namespace WatchfulEye.Server.App
         {
             Logging.Info("Starting main window");
             InitializeComponent();
+            //MessageFactory.AssignMessageBuilder(new DebugJsonMessageBuilder());
+            MessageFactory.AssociateAssembly(Assembly.GetAssembly(typeof(MessageCodes)));
             
             _pages = new Dictionary<EyeSocket, EyeSocketDisplay>();
             _free = new Queue<EyeSocketDisplay>();

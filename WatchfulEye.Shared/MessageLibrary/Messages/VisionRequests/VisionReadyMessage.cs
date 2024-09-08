@@ -1,10 +1,10 @@
 using System.Text.Json.Serialization;
+using LettuceTalk.Core;
 
 namespace WatchfulEye.Shared.MessageLibrary.Messages.VisionRequests;
 
-public class VisionReadyMessage : BaseMessage {
-    public override MessageCodes MessageCode => MessageCodes.VISION_READY;
-
+[MessageData(MessageCodes.VISION_READY)]
+public class VisionReadyMessage : Message {
     [JsonInclude]
     public readonly VisionRequestType RequestType;
 

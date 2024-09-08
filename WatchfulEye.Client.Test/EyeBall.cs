@@ -1,6 +1,8 @@
 using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
+using LettuceTalk.Core;
+using LettuceTalk.NetMQ;
 using WatchfulEye.Shared.MessageLibrary;
 using WatchfulEye.Shared.MessageLibrary.Messages.General;
 using WatchfulEye.Shared.MessageLibrary.Messages.VisionRequests;
@@ -11,7 +13,7 @@ namespace WatchfulEye.Client.Eyes;
 /// <summary>
 /// The eyes of our world
 /// </summary>
-public class EyeBall : BaseMessageSender {
+public class EyeBall : NetMQTalker {
     public readonly AutoResetEvent DisconnectedWaiter;
     public readonly string SocketIP;
 
@@ -24,21 +26,21 @@ public class EyeBall : BaseMessageSender {
         
         Logging.Info($"New eye ball created {Name}");
         Logging.Debug($"Bounded at {SocketIP} at {port} for communication and {port+1} for vision");
+        SubscribeMessages();
     }
 
     /// <summary>
     /// Helper method to subscribe to all the messages we care about
     /// </summary>
-    protected override void SubscribeMessages() {
-        base.SubscribeMessages();
-        _handler.Subscribe<RequestStreamMessage>(HandleStreamRequest);
-        _handler.Subscribe<RequestPictureMessage>(HandlePictureRequest);
+    protected void SubscribeMessages() {
+        Subscribe<RequestStreamMessage>(HandleStreamRequest);
+        Subscribe<RequestPictureMessage>(HandlePictureRequest);
     }
 
     /// <summary>
     /// Method for when heartbeat fails
     /// </summary>
-    protected override void OnHeartBeatFail() {
+    protected void OnHeartBeatFail() {
         Logging.Fatal($"Heartbeat Failure");
         DisconnectedWaiter.Set();
     }
@@ -137,8 +139,8 @@ public class EyeBall : BaseMessageSender {
             try {
                 // send register
                 Logging.Info("Sending Registration for EyeBall");
-                byte[] msgData = new RegisterEyeMessage(eyeName).ToData();
-                client.Send(new RegisterEyeMessage(eyeName).ToData(), msgData.Length, new IPEndPoint(IPAddress.Broadcast, 8888));
+                byte[] msgData = MessageFactory.GetMessageData(new RegisterEyeMessage(eyeName));
+                client.Send(msgData, msgData.Length, new IPEndPoint(IPAddress.Broadcast, 8888));
 
                 // attempt receive ack
                 Logging.Info("Waiting for Registration Acknowledgement");
@@ -165,19 +167,14 @@ public class EyeBall : BaseMessageSender {
         }
         
         // decode ack
-        (MessageCodes, string) receiveMsg = MessageFactory.GetMessageData(receiveData);
-        if (receiveMsg.Item1 != MessageCodes.REGISTER_EYE_ACK) {
-            Logging.Error("Received a message back that is not a register ack message, cannot proceed");
-            throw new Exception("Failed to parse or receive ACK message");
-        }
-        RegisterEyeAckMessage? ackMessage = MessageFactory.DeserializeMsg<RegisterEyeAckMessage>(receiveMsg.Item2);
-        if (ackMessage == default) {
+        RegisterEyeAckMessage receiveMsg = (RegisterEyeAckMessage)MessageFactory.GetMessage(receiveData);
+        if (receiveMsg == default) {
             Logging.Error("Received an Ack message that failed JSON parse");
             throw new Exception("Failed to parse JSON Ack message");
         }
 
         // fully socket
         client.Close();
-        return new EyeBall(ackMessage.ServerIP, ackMessage.Port, eyeName, false);
+        return new EyeBall(receiveMsg.ServerIP, receiveMsg.Port, eyeName, false);
     }
 }

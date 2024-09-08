@@ -4,13 +4,14 @@ using Serilog;
 using WatchfulEye.Shared.Utility;
 using WatchfulEye.Shared.MessageLibrary.Messages.VisionRequests;
 using WatchfulEye.Shared.MessageLibrary;
+using LettuceTalk.NetMQ;
 
 namespace WatchfulEye.Server.Eyes;
 
 /// <summary>
 /// The "Socket" for the EyeBalls out in the world
 /// </summary>
-public class EyeSocket : BaseMessageSender {
+public class EyeSocket : NetMQTalker {
     public event Action<VisionRequestType>? OnVisionReady;
 
     private readonly IPEndPoint _connectionPoint;
@@ -27,12 +28,12 @@ public class EyeSocket : BaseMessageSender {
         _mainSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         _mainSocket.Bind(_connectionPoint);
         _mainSocket.Listen();
+        SubscribeMessages();
     }
 
 
-    protected override void SubscribeMessages() {
-        base.SubscribeMessages();
-        _handler.Subscribe<VisionReadyMessage>(HandleVisionReady);
+    protected void SubscribeMessages() {
+        Subscribe<VisionReadyMessage>(HandleVisionReady);
     }
 
     /// <summary>
@@ -64,7 +65,7 @@ public class EyeSocket : BaseMessageSender {
     /// <summary>
     /// Handler method for when our heart beat fails
     /// </summary>
-    protected override void OnHeartBeatFail() {
+    protected void OnHeartBeatFail() {
         Logging.Error($"Heartbeat Failure");
         EyeManager.DeregisterEye(Name);
     }
