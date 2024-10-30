@@ -13,20 +13,20 @@ namespace WatchfulEye.Client.Eyes;
 /// <summary>
 /// The eyes of our world
 /// </summary>
-public class EyeBall : NetMQTalker {
+public class EyeBall : NetMQPeer {
     public readonly AutoResetEvent DisconnectedWaiter;
     public readonly string SocketIP;
 
     private bool _isBusy;
     private int _currentThumbnailCount = 1;
     
-    public EyeBall(string ip, int port, string eyeName, bool isBind = true) : base(ip, port, eyeName, isBind) {
+    public EyeBall(string ip, int port, string eyeName, bool isBind = false) : base(eyeName, ip, port, isBind) {
         SocketIP = ip;
         DisconnectedWaiter = new AutoResetEvent(false);
         
         Logging.Info($"New eye ball created {Name}");
-        Logging.Debug($"Bounded at {SocketIP} at {port} for communication and {port+1} for vision");
         SubscribeMessages();
+        SendMessage(new RegisterClient(preRegisterClient:false));
     }
 
     /// <summary>
@@ -35,6 +35,7 @@ public class EyeBall : NetMQTalker {
     protected void SubscribeMessages() {
         Subscribe<RequestStreamMessage>(HandleStreamRequest);
         Subscribe<RequestPictureMessage>(HandlePictureRequest);
+        Subscribe<RegisterClientAck>(OnRegisterAck);
     }
 
     /// <summary>
@@ -43,6 +44,10 @@ public class EyeBall : NetMQTalker {
     protected void OnHeartBeatFail() {
         Logging.Fatal($"Heartbeat Failure");
         DisconnectedWaiter.Set();
+    }
+
+    protected void OnRegisterAck(RegisterClientAck ackMessage) {
+        Logging.Debug("Received ack from server");
     }
 
     #region Picture
@@ -175,6 +180,6 @@ public class EyeBall : NetMQTalker {
 
         // fully socket
         client.Close();
-        return new EyeBall(receiveMsg.ServerIP, receiveMsg.Port, eyeName, false);
+        return new EyeBall(receiveMsg.ServerIP, receiveMsg.Port, eyeName);
     }
 }

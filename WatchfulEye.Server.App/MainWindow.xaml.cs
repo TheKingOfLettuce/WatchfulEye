@@ -55,7 +55,7 @@ namespace WatchfulEye.Server.App
         {
             if (_pages.ContainsKey(eye))
             {
-                Logging.Error($"EyeSocket with name {eye.Name} already is registered");
+                Logging.Error($"EyeSocket with name {eye.EyeName} already is registered");
                 return;
             }
 

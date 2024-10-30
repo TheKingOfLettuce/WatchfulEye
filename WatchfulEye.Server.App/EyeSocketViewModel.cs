@@ -189,7 +189,7 @@ public class EyeSocketViewModel : PropertyChangedBase {
     /// Saves the vision stream into image data
     /// </summary>
     private async void SaveThumbnail() {
-        Logging.Info($"Creating thumbnail data for eye {_eye?.Name}");
+        Logging.Info($"Creating thumbnail data for eye {_eye?.EyeName}");
         CurrentStatus = "Downloading Thumbnail";
         MemoryStream memoryStream = new MemoryStream();
         await _visionStream.CopyToAsync(memoryStream);
@@ -218,7 +218,7 @@ public class EyeSocketViewModel : PropertyChangedBase {
     /// </summary>
     /// <param name="image">the image to set</param>
     private void SetThumbnail(ImageSource image) {
-        Logging.Info($"Setting thumbnail image for eye {_eye?.Name}");
+        Logging.Info($"Setting thumbnail image for eye {_eye?.EyeName}");
         CurrentStatus = "Thumbnail Downloaded";
         ThumbnailSource = image;
         ThumbnailVisibility = true;
@@ -256,7 +256,7 @@ public class EyeSocketViewModel : PropertyChangedBase {
         _mediaInput?.Dispose();
         _visionStream?.Dispose();
         _mediaInput = null;
-        Logging.Info($"Player stopped for Eye {_eye?.Name}");
+        Logging.Info($"Player stopped for Eye {_eye?.EyeName}");
         VideoVisibility = false;
         CurrentStatus = "Camera live ended";
     }
@@ -283,7 +283,7 @@ public class EyeSocketViewModel : PropertyChangedBase {
             return;
         }
 
-        Logging.Info($"Handle vision ready for request {requestType} for eye {_eye.Name}");
+        Logging.Info($"Handle vision ready for request {requestType} for eye {_eye.EyeName}");
         switch (requestType) {
             case VisionRequestType.Stream:
                 HostStream();

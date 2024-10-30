@@ -3,15 +3,17 @@ using System.Net.Sockets;
 using Serilog;
 using WatchfulEye.Shared.Utility;
 using WatchfulEye.Shared.MessageLibrary.Messages.VisionRequests;
-using WatchfulEye.Shared.MessageLibrary;
 using LettuceTalk.NetMQ;
+using LettuceTalk.Core.MessageHandlers;
+using LettuceTalk.Core;
 
 namespace WatchfulEye.Server.Eyes;
 
 /// <summary>
 /// The "Socket" for the EyeBalls out in the world
 /// </summary>
-public class EyeSocket : NetMQTalker {
+public class EyeSocket : MessageCallbackHandler {
+    public readonly string EyeName;
     public event Action<VisionRequestType>? OnVisionReady;
 
     private readonly IPEndPoint _connectionPoint;
@@ -23,8 +25,9 @@ public class EyeSocket : NetMQTalker {
     /// <param name="ip">the ip address of the connection</param>
     /// <param name="port">the port of the connection</param>
     /// <param name="eyeName">the name of the eyeball</param>
-    public EyeSocket(string ip, int port, string eyeName, bool isBind = true) : base(ip, port, eyeName, isBind) {
-        _connectionPoint = new IPEndPoint(IPAddress.Parse("0.0.0.0"), port+1);
+    public EyeSocket(int port, string eyeName) : base() {
+        EyeName = eyeName;
+        _connectionPoint = new IPEndPoint(IPAddress.Parse("0.0.0.0"), port);
         _mainSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         _mainSocket.Bind(_connectionPoint);
         _mainSocket.Listen();
@@ -41,7 +44,7 @@ public class EyeSocket : NetMQTalker {
     /// </summary>
     public void RequestStream() {
         RequestStreamMessage streamMessage = new RequestStreamMessage(15, _connectionPoint.Port, 1280, 720);
-        SendMessage(streamMessage);
+        SendMessageToClient(streamMessage);
     }
 
     /// <summary>
@@ -51,7 +54,11 @@ public class EyeSocket : NetMQTalker {
     /// <param name="height">the height of the picture</param>
     public void RequestPicture(int width, int height) {
         RequestPictureMessage request = new RequestPictureMessage(_connectionPoint.Port, width, height);
-        SendMessage(request);
+        SendMessageToClient(request);
+    }
+
+    protected void SendMessageToClient(Message message) {
+        EyeManager.Server.SendMessage(new SendClientMessageArgs(EyeName, message));
     }
 
     /// <summary>
@@ -67,7 +74,7 @@ public class EyeSocket : NetMQTalker {
     /// </summary>
     protected void OnHeartBeatFail() {
         Logging.Error($"Heartbeat Failure");
-        EyeManager.DeregisterEye(Name);
+        EyeManager.DeregisterEye(EyeName);
     }
 
     /// <summary>
@@ -84,7 +91,7 @@ public class EyeSocket : NetMQTalker {
             return new NetworkStream(handle, true);
         }
         catch (OperationCanceledException canceledE) {
-            Log.Warning("Timeout occured when attempting vision connection", canceledE);
+            Log.Warning("Timeout occurred when attempting vision connection", canceledE);
             return null;
         }
     }
@@ -92,9 +99,8 @@ public class EyeSocket : NetMQTalker {
     /// <summary>
     /// Disposes our socket, closing IPCs and heartbeats
     /// </summary>
-    protected override void Dispose(bool fromDispose) {
+    public void Dispose(bool fromDispose) {
         Logging.Debug($"Disposing {nameof(EyeSocket)}");
-        base.Dispose(fromDispose);
         if (!fromDispose) return;
 
         _mainSocket.Close();

@@ -3,6 +3,7 @@ using WatchfulEye.Shared.MessageLibrary;
 using LettuceTalk.Core;
 using WatchfulEye.Shared.MessageLibrary.Messages.General;
 using WatchfulEye.Shared.Utility;
+using LettuceTalk.NetMQ;
 
 namespace WatchfulEye.Server.Eyes;
 
@@ -10,18 +11,20 @@ namespace WatchfulEye.Server.Eyes;
 /// Static manager for EyeSockets, handling discovery and registration
 /// </summary>
 public static class EyeManager {
-    public static IReadOnlyCollection<EyeSocket> EyeSockets => _eyeSockets.Values;
-    private static Dictionary<string, EyeSocket> _eyeSockets;
+    public static readonly NetMQServer Server;
 
     public static event Action<EyeSocket>? OnEyeSocketAdded;
     public static event Action<EyeSocket>? OnEyeSocketRemoved;
 
+    private static readonly string _serverIP;
+    private const int _serverPort = 8000;
     private static int _eyeSocketPort = 8001;
     private static CancellationTokenSource _networkDiscoverCancel;
     private static bool _enabled;
 
     static EyeManager() {
-        _eyeSockets = new Dictionary<string, EyeSocket>();
+        _serverIP = IPUtils.GetLocalIP();
+        Server = new NetMQServer(_serverIP, _serverPort);
         
         _networkDiscoverCancel = new CancellationTokenSource();
     }
@@ -54,16 +57,6 @@ public static class EyeManager {
     public static void DeregisterEye(string eyeName) => HandleDeregisterEye(new DeRegisterEyeMessage(eyeName));
 
     /// <summary>
-    /// Post a message to all registered <see cref="EyeSocket"/>
-    /// </summary>
-    /// <param name="message">the message to post</param>
-    public static void PostToAllSockets(Message message) {
-        foreach(EyeSocket socket in _eyeSockets.Values) {
-            socket.SendMessage(message);
-        }
-    }
-
-    /// <summary>
     /// Network discovery loop, waits for a registration message and sends an acknowledgement to fully socket eye
     /// </summary>
     /// <param name="token">the token to cancel our loop</param>
@@ -91,17 +84,16 @@ public static class EyeManager {
                 Logging.Error("Failed to parse JSON register message");
                 continue;
             }
-            string localIP = IPUtils.GetLocalIP();
-            if (!HandleRegisterEye(register, localIP, _eyeSocketPort)) {
+            if (!HandleRegisterEye(register, _eyeSocketPort)) {
                 Logging.Error("Didn't register eye, not sending ack");
                 continue;
             }
             Logging.Debug("Eye socket created, sending register ack back");
 
             // send ack message back
-            byte[] msgAckData = MessageFactory.GetMessageData(new RegisterEyeAckMessage(_eyeSocketPort, localIP));
+            byte[] msgAckData = MessageFactory.GetMessageData(new RegisterEyeAckMessage(_serverPort, _serverIP));
             await server.SendAsync(msgAckData, msgAckData.Length, clientResults.RemoteEndPoint);
-            _eyeSocketPort += 2;
+            _eyeSocketPort++;
             Logging.Debug("Registration Acknowledgment sent");
         }
 
@@ -115,14 +107,18 @@ public static class EyeManager {
     /// <param name="ip">the local ip for socket</param>
     /// <param name="port">the port to bind to for socket</param>
     /// <returns>if it successfully registered</returns>
-    private static bool HandleRegisterEye(RegisterEyeMessage msg, string ip, int port) {
+    private static bool HandleRegisterEye(RegisterEyeMessage msg, int port) {
         Logging.Info($"Received a Register Eye message for {msg.EyeName}");
-        if (_eyeSockets.ContainsKey(msg.EyeName)) {
-            Logging.Warning($"Already have eye socket named {msg.EyeName}");
+        EyeSocket socket;
+        try {
+            socket = new EyeSocket(port, msg.EyeName);
+            Server.PreRegisterClient(msg.EyeName, socket, false);
+        }
+        catch (Exception e) {
+            Logging.Error("Failed to pre-register client to server", e);
             return false;
         }
-        EyeSocket socket = new EyeSocket(ip, port, msg.EyeName);
-        _eyeSockets.Add(msg.EyeName, socket);
+        
         OnEyeSocketAdded?.Invoke(socket);
         return true;
     }
@@ -133,15 +129,18 @@ public static class EyeManager {
     /// <param name="message">the <see cref="DeRegisterEyeMessage"/></param>
     private static void HandleDeregisterEye(DeRegisterEyeMessage message) {
         Logging.Info($"Received DeRegister Eye Message for {message.EyeName}");
-        if (!_eyeSockets.ContainsKey(message.EyeName)) {
-            Logging.Warning($"No eye socket with name {message.EyeName}");
+        EyeSocket removedSocket;
+        try {
+            removedSocket = (EyeSocket)Server.GetClientCallbackHandler(message.EyeName);
+            Server.DeregisterClient(message.EyeName);
+        }
+        catch (Exception e) {
+            Logging.Error($"Failed to remove Eye Socket with name {message.EyeName}", e);
             return;
         }
 
-        EyeSocket eye = _eyeSockets[message.EyeName];
-        _eyeSockets.Remove(message.EyeName);
-        OnEyeSocketRemoved?.Invoke(eye);
-        eye.Dispose();
+        OnEyeSocketRemoved?.Invoke(removedSocket);
+        removedSocket.Dispose(false);
     }
 
     /// <summary>
@@ -151,8 +150,6 @@ public static class EyeManager {
         Logging.Debug($"Disposing {nameof(EyeManager)}");
 
         StopNetworkDiscovery();
-        foreach(EyeSocket eye in _eyeSockets.Values) {
-            eye.Dispose();
-        }
+        Server.Dispose();
     }
 }

@@ -90,7 +90,7 @@ public class HeartbeatMonitor : IDisposable {
             await Task.Delay(time, token);
         }
         catch (OperationCanceledException) {
-            return;
+            
         }
 
         return;
