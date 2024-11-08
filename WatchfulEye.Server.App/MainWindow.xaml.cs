@@ -44,13 +44,14 @@ namespace WatchfulEye.Server.App
             _free.Enqueue(Socket4);
             
             Logging.Info("Starting EyeManager");
-            EyeManager.OnEyeSocketAdded += HandleSocketAdd;
+            EyeManager.Server.OnClientRegistered += HandleSocketAdd;
             EyeManager.OnEyeSocketRemoved += HandleSocketRemoved;
             EyeManager.StartNetworkDiscovery();
         }
 
-        private void HandleSocketAdd(EyeSocket eye)
+        private void HandleSocketAdd(string eyeID)
         {
+            EyeSocket eye = (EyeSocket)EyeManager.Server.GetClientCallbackHandler(eyeID);
             if (_pages.ContainsKey(eye))
             {
                 Logging.Error($"EyeSocket with name {eye.EyeName} already is registered");
