@@ -71,7 +71,7 @@ public class EyeBall : NetMQPeer {
         _isBusy = true;
         Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         await socket.ConnectAsync(new IPEndPoint(IPAddress.Parse(SocketIP), message.Port));
-        SendMessage(new VisionReadyMessage(message.VisionRequestType));
+        SendMessage(new VisionReadyMessage(VisionRequestType.Picture));
         using NetworkStream stream = new NetworkStream(socket, true);
         await stream.WriteAsync(await File.ReadAllBytesAsync($"TestPictures/Test{_currentThumbnailCount}.jpg"));
         _isBusy = false;
@@ -110,7 +110,7 @@ public class EyeBall : NetMQPeer {
         _isBusy = true;
         Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         await socket.ConnectAsync(new IPEndPoint(IPAddress.Parse(SocketIP), message.Port));
-        SendMessage(new VisionReadyMessage(message.VisionRequestType));
+        SendMessage(new VisionReadyMessage(VisionRequestType.Stream));
         using NetworkStream stream = new NetworkStream(socket, true);
         byte[] data = await File.ReadAllBytesAsync($"TestVideos/BoinkTrailer.mp4");
         int dataCount = data.Length / 30;

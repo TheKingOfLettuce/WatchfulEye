@@ -3,7 +3,7 @@ using LettuceTalk.Core;
 
 namespace WatchfulEye.Shared.MessageLibrary.Messages.General;
 
-[MessageData(MessageCodes.DEREGISTER_EYE)]
+[MessageData]
 public class DeRegisterEyeMessage : Message {
     [JsonInclude]
     public readonly string EyeName;

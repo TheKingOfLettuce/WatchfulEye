@@ -3,10 +3,8 @@ using LettuceTalk.Core;
 
 namespace WatchfulEye.Shared.MessageLibrary.Messages.VisionRequests;
 
-[MessageData(MessageCodes.REQUEST_STREAM)]
-public class RequestStreamMessage : VisionRequestMessage {
-    public override VisionRequestType VisionRequestType => VisionRequestType.Stream;
-
+[MessageData]
+public class RequestStreamMessage : Message {
     [JsonInclude]
     public readonly float StreamLength;
     [JsonInclude]

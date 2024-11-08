@@ -79,7 +79,7 @@ public class EyeBall : NetMQPeer {
             CreateNoWindow = false
         };
 
-        await StartVisionProcess(startInfo, message);
+        await StartVisionProcess(startInfo, VisionRequestType.Picture);
     }
 
     #endregion
@@ -123,11 +123,11 @@ public class EyeBall : NetMQPeer {
             CreateNoWindow = false
         };
 
-        await StartVisionProcess(startInfo, message);
+        await StartVisionProcess(startInfo, VisionRequestType.Stream);
     }
     #endregion
 
-    private async Task<bool> StartVisionProcess(ProcessStartInfo startInfo, VisionRequestMessage message) {
+    private async Task<bool> StartVisionProcess(ProcessStartInfo startInfo, VisionRequestType requestType) {
         Logging.Debug("Starting python process");
         using Process? pythonStream = Process.Start(startInfo);
         if (pythonStream == null || pythonStream.HasExited) {
@@ -136,7 +136,7 @@ public class EyeBall : NetMQPeer {
         }
 
         _isBusy = true;
-        SendMessage(new VisionReadyMessage(message.VisionRequestType));
+        SendMessage(new VisionReadyMessage(requestType));
         await pythonStream.WaitForExitAsync();
         Logging.Debug("Python process finshed");
         _isBusy = false;

@@ -2,5 +2,5 @@ using LettuceTalk.Core;
 
 namespace WatchfulEye.Shared.MessageLibrary.Messages.General;
 
-[MessageData(MessageCodes.HEARTBEAT)]
+[MessageData]
 public class HeartbeatMessage : Message {}

@@ -3,10 +3,8 @@ using LettuceTalk.Core;
 
 namespace WatchfulEye.Shared.MessageLibrary.Messages.VisionRequests;
 
-[MessageData(MessageCodes.REQUEST_PICTURE)]
-public class RequestPictureMessage : VisionRequestMessage {
-    public override VisionRequestType VisionRequestType => VisionRequestType.Picture;
-
+[MessageData]
+public class RequestPictureMessage : Message {
     [JsonInclude]
     public readonly int Port;
     [JsonInclude]

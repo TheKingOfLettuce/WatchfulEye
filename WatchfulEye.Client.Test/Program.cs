@@ -8,8 +8,6 @@ namespace WatchfulEye.Client;
 
 internal static class Program {
     public static void Main(string[] args) {
-        //MessageFactory.AssignMessageBuilder(new DebugJsonMessageBuilder());
-        MessageFactory.AssociateAssembly(Assembly.GetAssembly(typeof(MessageCodes)));
         Logging.Debug("Creating eyeball");
         using EyeBall? eye = EyeBall.SocketEye(args[0]);
         if (eye == null) {

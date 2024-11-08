@@ -7,8 +7,3 @@ public enum VisionRequestType {
     Stream,
     Picture
 }
-
-
-public abstract class VisionRequestMessage : Message {
-    public abstract VisionRequestType VisionRequestType {get;}
-}

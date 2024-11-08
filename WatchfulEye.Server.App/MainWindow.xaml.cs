@@ -35,8 +35,6 @@ namespace WatchfulEye.Server.App
         {
             Logging.Info("Starting main window");
             InitializeComponent();
-            //MessageFactory.AssignMessageBuilder(new DebugJsonMessageBuilder());
-            MessageFactory.AssociateAssembly(Assembly.GetAssembly(typeof(MessageCodes)));
             
             _pages = new Dictionary<EyeSocket, EyeSocketDisplay>();
             _free = new Queue<EyeSocketDisplay>();

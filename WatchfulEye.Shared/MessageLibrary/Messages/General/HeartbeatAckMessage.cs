@@ -2,5 +2,5 @@ using LettuceTalk.Core;
 
 namespace WatchfulEye.Shared.MessageLibrary.Messages.General;
 
-[MessageData(MessageCodes.HEARTBEAT_ACK)]
+[MessageData]
 public class HeartbeatAckMessage : Message {}

@@ -3,7 +3,7 @@ using LettuceTalk.Core;
 
 namespace WatchfulEye.Shared.MessageLibrary.Messages.VisionRequests;
 
-[MessageData(MessageCodes.VISION_READY)]
+[MessageData]
 public class VisionReadyMessage : Message {
     [JsonInclude]
     public readonly VisionRequestType RequestType;
