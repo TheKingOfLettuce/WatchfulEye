@@ -4,10 +4,6 @@
     <ProjectReference Include="..\WatchfulEye.Shared\WatchfulEye.Shared.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="NetMQ" Version="4.0.1.13" />
-  </ItemGroup>
-
   <PropertyGroup>
     <TargetFramework>net7.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>

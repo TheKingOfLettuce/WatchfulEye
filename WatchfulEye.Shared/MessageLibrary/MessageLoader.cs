@@ -9,7 +9,7 @@ public static class MessageLoader {
     [ModuleInitializer]
     internal static void AssociateMessages() {
         try {
-            MessageFactory.AssociateAssembly(Assembly.GetAssembly(typeof(MessageLoader)));
+            MessageFactory.AssociateAssembly(typeof(MessageLoader).Assembly);
         }
         catch (ArgumentException e) {
             Logging.Error("Failed to load messages", e);

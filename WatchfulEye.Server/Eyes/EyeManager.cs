@@ -1,5 +1,4 @@
 using System.Net.Sockets;
-using WatchfulEye.Shared.MessageLibrary;
 using LettuceTalk.Core;
 using WatchfulEye.Shared.MessageLibrary.Messages.General;
 using WatchfulEye.Shared.Utility;

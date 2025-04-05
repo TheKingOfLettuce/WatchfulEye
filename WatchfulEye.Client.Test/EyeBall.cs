@@ -113,14 +113,14 @@ public class EyeBall : NetMQPeer {
         SendMessage(new VisionReadyMessage(VisionRequestType.Stream));
         using NetworkStream stream = new NetworkStream(socket, true);
         byte[] data = await File.ReadAllBytesAsync($"TestVideos/BoinkTrailer.mp4");
-        int dataCount = data.Length / 30;
-        int currentCount = 0;
-        while (currentCount < 30) {
-            int offset = dataCount*currentCount;
-            await stream.WriteAsync(data, offset, data.Length - offset > dataCount ? dataCount : data.Length - offset);
-            await Task.Delay(250);
-            currentCount++;
+        int offset = 0;
+        while (offset < data.Length)
+        {
+            int size = Math.Min(8192, data.Length - offset);
+            await stream.WriteAsync(data, offset, size);
+            offset += size;
         }
+        await stream.FlushAsync();
         _isBusy = false;
     }
     #endregion
